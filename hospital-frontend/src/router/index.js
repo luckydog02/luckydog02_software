@@ -32,7 +32,13 @@ import DataExpore from "@/views/DataExpore.vue";
 import echarts from 'echarts';//引入echarts
 import DealOrderAgain from "@/views/doctor/DealOrderAgain.vue";
 import DoctorCard from "@/views/doctor/DoctorCard.vue";
-import PatientCard from "@/views/patient/PatientCard.vue"
+import PatientCard from "@/views/patient/PatientCard.vue";
+import HospitalIntroduction from "@/views/patient/HospitalIntroduction.vue";
+import DepartmentNavigation from "@/views/patient/DepartmentNavigation.vue";
+import DoctorTeam from "@/views/patient/DoctorTeam.vue";
+import TreatmentReviews from "@/views/patient/TreatmentReviews.vue";
+import MyAppointments from "@/views/patient/MyAppointments.vue";
+import BookNow from "@/views/patient/BookNow.vue";
 
 Vue.prototype.$echarts = echarts;//引入echarts
 Vue.use(ElementUI);
@@ -142,6 +148,48 @@ const routes = [
       {
         path: "/patientLayout",
         component: PatientHome,
+        meta: {
+          requireAuth: true,
+        },
+      },
+      {
+        path: "/hospitalIntro",
+        component: HospitalIntroduction,
+        meta: {
+          requireAuth: true,
+        },
+      },
+      {
+        path: "/departmentNav",
+        component: DepartmentNavigation,
+        meta: {
+          requireAuth: true,
+        },
+      },
+      {
+        path: "/doctorTeam",
+        component: DoctorTeam,
+        meta: {
+          requireAuth: true,
+        },
+      },
+      {
+        path: "/treatmentReviews",
+        component: TreatmentReviews,
+        meta: {
+          requireAuth: true,
+        },
+      },
+      {
+        path: "/myAppointments",
+        component: MyAppointments,
+        meta: {
+          requireAuth: true,
+        },
+      },
+      {
+        path: "/bookNow",
+        component: BookNow,
         meta: {
           requireAuth: true,
         },

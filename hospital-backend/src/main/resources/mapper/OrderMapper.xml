@@ -124,7 +124,7 @@
         on o.p_id=#{pId}
         and o.d_id=d.d_id
         and o.p_id=p.p_id
-        ORDER BY o.o_end DESC
+        ORDER BY o.o_start DESC
     </select>
 
 </mapper>

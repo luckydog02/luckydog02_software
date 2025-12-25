@@ -4,6 +4,7 @@ import com.shanzhu.hospital.common.R;
 import com.shanzhu.hospital.entity.po.Orders;
 import com.shanzhu.hospital.entity.po.Patient;
 import com.shanzhu.hospital.entity.vo.DoctorListVo;
+import com.shanzhu.hospital.entity.vo.SectionVo;
 import com.shanzhu.hospital.entity.vo.user.PatientUserVo;
 import com.shanzhu.hospital.service.DoctorUserService;
 import com.shanzhu.hospital.service.OrderService;
@@ -128,5 +129,15 @@ public class PatientUserController {
     @RequestMapping("patientAge")
     public R<List<Integer>> patientAge() {
         return R.ok(patientUserService.patientAge());
+    }
+
+    /**
+     * 获取所有科室列表（包含每个科室的医生数量）
+     *
+     * @return 科室列表
+     */
+    @RequestMapping("section/list")
+    public R<List<com.shanzhu.hospital.entity.vo.SectionVo>> getSectionList() {
+        return R.ok(doctorUserService.getAllSectionsWithDoctorCount());
     }
 }

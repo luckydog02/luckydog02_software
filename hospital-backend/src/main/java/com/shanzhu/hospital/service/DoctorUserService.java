@@ -93,4 +93,11 @@ public interface DoctorUserService {
      */
     Boolean updateStar(Integer dId, Double dStar);
 
+    /**
+     * 获取所有科室列表（包含每个科室的医生数量）
+     *
+     * @return 科室列表
+     */
+    java.util.List<com.shanzhu.hospital.entity.vo.SectionVo> getAllSectionsWithDoctorCount();
+
 }
