@@ -20,8 +20,14 @@
           </div>
         </div>
         <div class="navbar-right">
-          <el-button type="success" class="book-now-btn" @click="menuClick('bookNow')">立即预约</el-button>
-          <el-button type="danger" round size="mini" @click="logoutPatient" style="margin-left: 10px;">退出</el-button>
+          <div class="book-now-link" @click="menuClick('bookNow')">
+            <i class="el-icon-calendar"></i>
+            <span>立即预约</span>
+          </div>
+          <el-button class="logout-btn" @click="logoutPatient">
+            <i class="el-icon-switch-button"></i>
+            退出
+          </el-button>
         </div>
       </div>
       
@@ -49,6 +55,7 @@ export default {
                 { label: "医院介绍", path: "hospitalIntro" },
                 { label: "科室导航", path: "departmentNav" },
                 { label: "医生团队", path: "doctorTeam" },
+                { label: "智能助手", path: "aiChat" },
                 { label: "诊疗评价", path: "treatmentReviews" },
                 { label: "我的预约", path: "myAppointments" },
             ],
@@ -122,6 +129,8 @@ export default {
                 this.activePath = "departmentNav";
             } else if (to.path.includes("doctorTeam")) {
                 this.activePath = "doctorTeam";
+            } else if (to.path.includes("aiChat")) {
+                this.activePath = "aiChat";
             } else if (to.path.includes("treatmentReviews")) {
                 this.activePath = "treatmentReviews";
             } else if (to.path.includes("myAppointments")) {
@@ -190,17 +199,92 @@ export default {
     }
     
     .navbar-right {
-        .book-now-btn {
-            background-color: #2d8659;
-            border-color: #2d8659;
-            color: #fff;
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        
+        .book-now-link {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
             font-size: 16px;
-            padding: 12px 30px;
-            font-weight: 600;
+            color: #409EFF;
+            padding: 8px 16px;
+            font-weight: 500;
+            border-radius: 20px;
+            transition: all 0.3s ease;
+            background: linear-gradient(135deg, rgba(64, 158, 255, 0.1) 0%, rgba(64, 158, 255, 0.05) 100%);
+            border: 1px solid rgba(64, 158, 255, 0.2);
+            position: relative;
+            overflow: hidden;
+            
+            &::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: -100%;
+                width: 100%;
+                height: 100%;
+                background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+                transition: left 0.5s;
+            }
+            
+            i {
+                font-size: 18px;
+                color: #409EFF;
+            }
+            
+            span {
+                position: relative;
+                z-index: 1;
+            }
             
             &:hover {
-                background-color: #24704a;
-                border-color: #24704a;
+                background: linear-gradient(135deg, rgba(64, 158, 255, 0.15) 0%, rgba(64, 158, 255, 0.1) 100%);
+                border-color: rgba(64, 158, 255, 0.4);
+                color: #66b1ff;
+                transform: translateY(-1px);
+                box-shadow: 0 2px 8px rgba(64, 158, 255, 0.2);
+                
+                &::before {
+                    left: 100%;
+                }
+                
+                i {
+                    color: #66b1ff;
+                }
+            }
+            
+            &:active {
+                transform: translateY(0);
+            }
+        }
+        
+        .logout-btn {
+            background-color: #fff;
+            border: 1px solid #dcdfe6;
+            color: #606266;
+            font-size: 14px;
+            padding: 8px 18px;
+            font-weight: 500;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+            
+            i {
+                margin-right: 4px;
+                font-size: 14px;
+            }
+            
+            &:hover {
+                background-color: #f5f7fa;
+                border-color: #c0c4cc;
+                color: #409EFF;
+            }
+            
+            &:active {
+                background-color: #ecf5ff;
+                border-color: #409EFF;
             }
         }
     }

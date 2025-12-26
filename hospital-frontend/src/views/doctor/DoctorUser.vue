@@ -3,55 +3,66 @@
  *
 -->
 <template>
-  <el-container>
+  <el-container class="doctor-container">
     <!-- 头部 -->
-    <el-header>
-      <div class="font_words">
-          <span @click="menuClick('adminLayout')">
-            <img src="../../assets/logo.png" style="width: 35px;position: relative; top: 8px;right: 6px"/>
-             <span style="color: rebeccapurple;font-size: 20px">医院管理系统</span>
-          </span>
+    <el-header class="doctor-header">
+      <div class="header-left">
+        <div class="logo-wrapper" @click="menuClick('doctorLayout')">
+          <img src="../../assets/hospital.png" class="hospital-logo" alt="医院图标"/>
+        </div>
       </div>
 
-      <div class="font_words">
-        <span>欢迎您，<b>{{ userName }}</b>&nbsp;医生&nbsp;</span>
-        <span><el-button type="danger" round size="mini" @click="logoutDoctor">退出</el-button></span>
+      <div class="header-right">
+        <div class="user-info">
+          <i class="el-icon-user-solid user-icon"></i>
+          <span class="welcome-text">欢迎您，<b>{{ userName }}</b>&nbsp;医生</span>
+        </div>
+        <el-button class="logout-btn" @click="logoutDoctor">
+          <i class="el-icon-switch-button"></i>
+          退出
+        </el-button>
       </div>
     </el-header>
 
-    <el-container>
+    <el-container style="flex: 1; overflow: hidden;">
       <!-- 侧边栏 -->
-      <el-aside width="200px">
+      <el-aside width="240px" class="doctor-aside">
         <!-- 导航菜单 -->
         <el-menu
-          background-color="white"
-          text-color="black"
-          active-text-color="black"
           :default-active="activePath"
-          style="font-size: 22px;"
+          class="doctor-menu"
+          background-color="#fff"
+          text-color="#606266"
+          active-text-color="#409EFF"
         >
-
           <el-menu-item index="doctorLayout" @click="menuClick('doctorLayout')">
-            <i class="iconfont icon-homepage-menu" style="font-size: 18px;"> 首页</i>
+            <i class="el-icon-s-home"></i>
+            <span slot="title">首页</span>
           </el-menu-item>
           <el-menu-item index="orderToday" @click="menuClick('orderToday')">
-            <i class="iconfont icon-orders-menu" style="font-size: 18px;"> 今日挂号列表</i>
+            <i class="el-icon-date"></i>
+            <span slot="title">今日挂号列表</span>
           </el-menu-item>
-            <el-menu-item index="doctorOrder" @click="menuClick('doctorOrder')">
-            <i class="iconfont icon-checks-menu" style="font-size: 18px;"> 历史挂号列表</i>
+          <el-menu-item index="doctorOrder" @click="menuClick('doctorOrder')">
+            <i class="el-icon-tickets"></i>
+            <span slot="title">历史挂号列表</span>
           </el-menu-item>
-            <el-menu-item index="inBed" @click="menuClick('inBed')">
-            <i class="iconfont icon-bed-menu" style="font-size: 18px;"> 住院申请管理</i>
+          <el-menu-item index="inBed" @click="menuClick('inBed')">
+            <i class="el-icon-suitcase"></i>
+            <span slot="title">住院申请管理</span>
           </el-menu-item>
-           <el-menu-item index="doctorCard" @click="menuClick('doctorCard')">
-            <i class="iconfont icon-doctor-menu" style="font-size: 18px;"> 个人信息查询</i>
+          <el-menu-item index="doctorCard" @click="menuClick('doctorCard')">
+            <i class="el-icon-user-solid"></i>
+            <span slot="title">个人信息查询</span>
           </el-menu-item>
-
         </el-menu>
       </el-aside>
-      <el-main>
-        <!-- 子路由入口 -->
-        <router-view></router-view>
+      <el-main class="doctor-main">
+        <div class="main-content-wrapper">
+          <transition name="fade-transform" mode="out-in">
+            <router-view></router-view>
+          </transition>
+        </div>
       </el-main>
     </el-container>
   </el-container>
@@ -111,30 +122,239 @@ export default {
 };
 </script>
 <style scoped lang="scss">
-.title{
-  cursor: pointer;
+.doctor-container {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
 }
-.el-header {
-  background-color: rgba(52, 114, 166, 0.18);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-bottom: 1px solid lightgrey;
-  .font_words {
-    text-align: center;
-    span {
-      color: black;
+
+// 头部样式
+.doctor-header {
+    background: #fff;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 30px;
+    height: 70px !important;
+    border-bottom: 1px solid #e4e7ed;
+    position: relative;
+    z-index: 1000;
+    
+    .header-left {
+        display: flex;
+        align-items: center;
+        
+        .logo-wrapper {
+            cursor: pointer;
+            transition: transform 0.3s ease;
+            
+            &:hover {
+                transform: scale(1.05);
+            }
+            
+            .hospital-logo {
+                width: 250px;
+                height: 30px;
+            }
+        }
     }
-  }
+    
+    .header-right {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            
+            .user-icon {
+                font-size: 18px;
+                color: #409EFF;
+            }
+            
+            .welcome-text {
+                font-size: 15px;
+                color: #606266;
+                
+                b {
+                    color: #303133;
+                    font-weight: 600;
+                }
+            }
+        }
+        
+        .logout-btn {
+            background-color: #fff;
+            border: 1px solid #dcdfe6;
+            color: #606266;
+            font-size: 14px;
+            padding: 8px 18px;
+            font-weight: 500;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+            
+            i {
+                margin-right: 4px;
+                font-size: 14px;
+            }
+            
+            &:hover {
+                background-color: #f5f7fa;
+                border-color: #c0c4cc;
+                color: #409EFF;
+            }
+            
+            &:active {
+                background-color: #ecf5ff;
+                border-color: #409EFF;
+            }
+        }
+    }
 }
-.el-container{
+
+// 侧边栏样式
+.doctor-aside {
+    background: #fff;
+    border-right: 1px solid #e4e7ed;
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.05);
+    overflow-y: auto;
+    
+    &::-webkit-scrollbar {
+        width: 6px;
+    }
+    
+    &::-webkit-scrollbar-track {
+        background: #f5f7fa;
+    }
+    
+    &::-webkit-scrollbar-thumb {
+        background: rgba(64, 158, 255, 0.3);
+        border-radius: 3px;
+        
+        &:hover {
+            background: rgba(64, 158, 255, 0.5);
+        }
+    }
+}
+
+// 菜单样式
+.doctor-menu {
+    border: none;
+    padding: 10px 0;
+    
+    ::v-deep .el-menu-item {
+        height: 50px;
+        line-height: 50px;
+        margin: 4px 10px;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+        
+        i {
+            margin-right: 8px;
+            font-size: 18px;
+            color: #606266;
+        }
+        
+        &:hover {
+            background-color: #ecf5ff !important;
+            color: #409EFF !important;
+            
+            i {
+                color: #409EFF;
+            }
+        }
+        
+        &.is-active {
+            background: linear-gradient(135deg, #409EFF 0%, #66b1ff 100%) !important;
+            color: #fff !important;
+            font-weight: 600;
+            box-shadow: 0 2px 8px rgba(64, 158, 255, 0.3);
+            
+            i {
+                color: #fff;
+            }
+        }
+    }
+}
+
+// 主内容区
+.doctor-main {
+    background: #f5f7fa;
+    padding: 0 !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    position: relative;
+    
+    &::-webkit-scrollbar {
+        width: 8px;
+    }
+    
+    &::-webkit-scrollbar-track {
+        background: rgba(0, 0, 0, 0.02);
+        border-radius: 4px;
+    }
+    
+    &::-webkit-scrollbar-thumb {
+        background: rgba(64, 158, 255, 0.3);
+        border-radius: 4px;
+        
+        &:hover {
+            background: rgba(64, 158, 255, 0.5);
+        }
+    }
+    
+    .main-content-wrapper {
+        padding: 20px;
+        box-sizing: border-box;
+    }
+}
+
+// Element UI 容器样式覆盖
+.doctor-container {
+    ::v-deep .el-container {
+        height: calc(100vh - 70px);
+        min-height: 0;
+        display: flex;
+        flex-direction: row;
+    }
+    
+    ::v-deep .el-header {
+        flex-shrink: 0;
+        height: 70px !important;
+    }
+    
+    ::v-deep .el-aside {
+        flex-shrink: 0;
         height: 100%;
+        overflow-y: auto;
     }
-.el-aside{
-  background-color:white;
-  border-right: 1px solid lightgrey;
+    
+    ::v-deep .el-main {
+        padding: 0 !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        height: 100% !important;
+        min-height: 0;
+        flex: 1;
+    }
 }
-.el-menu{
-  border: 0;
+
+// 页面切换动画
+.fade-transform-enter-active,
+.fade-transform-leave-active {
+    transition: all 0.3s ease;
+}
+
+.fade-transform-enter {
+    opacity: 0;
+    transform: translateX(20px);
+}
+
+.fade-transform-leave-to {
+    opacity: 0;
+    transform: translateX(-20px);
 }
 </style>

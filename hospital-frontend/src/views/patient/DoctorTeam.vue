@@ -23,7 +23,9 @@
                         <li 
                             v-for="category in visibleCategories" 
                             :key="category"
-                            class="fll"
+                            class="fll category-item"
+                            @mouseenter="handleCategoryHover(category)"
+                            @mouseleave="handleCategoryLeave"
                         >
                             <a 
                                 href="javascript:;" 
@@ -58,9 +60,14 @@
                     </ul>
                 </div>
                 
-                <!-- 第二行：细分科室（当选择大类时显示） -->
+                <!-- 第二行：细分科室（当悬停或选择大类时显示） -->
                 <transition name="slide-down">
-                    <div v-if="activeCategory !== '全部'" class="son-body br6 pl15 pt5 pb5 clr mb5">
+                    <div 
+                        v-if="(hoveredCategory && hoveredCategory !== '全部') || (activeCategory !== '全部' && !hoveredCategory)" 
+                        class="son-body br6 pl15 pt5 pb5 clr mb5"
+                        @mouseenter="handleSubSectionHover"
+                        @mouseleave="handleSubSectionLeave"
+                    >
                         <ul>
                             <li class="fll">
                                 <a 
@@ -72,7 +79,7 @@
                                 </a>
                             </li>
                             <li 
-                                v-for="section in currentSubSections" 
+                                v-for="section in getSubSectionsForCategory(hoveredCategory || activeCategory)" 
                                 :key="section"
                                 class="fll"
                             >
@@ -91,12 +98,10 @@
         </div>
         
         <!-- 主体内容 -->
-        <div class="br12 bw mb20">
-            <h3 class="f24 lh30 pt25 pr20 pl20">武汉协和医院医生列表</h3>
-
+        <div class="doctor-content-wrapper">
             <!-- 加载状态 -->
             <div v-if="loading" class="loading-container">
-                <i class="el-icon-loading" style="font-size: 32px; color: #409EFF;"></i>
+                <i class="el-icon-loading" style="font-size: 32px; color: #1890FF;"></i>
                 <p>加载中...</p>
             </div>
 
@@ -104,57 +109,64 @@
             <el-empty v-if="!loading && filteredDoctors.length === 0" description="暂无医生数据"></el-empty>
 
             <!-- 医生卡片列表 -->
-            <div v-if="!loading && filteredDoctors.length > 0" class="doctors-doctor-list">
+            <div v-if="!loading && filteredDoctors.length > 0" class="doctor-list-grid">
                 <div 
-                    v-for="(doctor, index) in filteredDoctors" 
+                    v-for="doctor in filteredDoctors" 
                     :key="doctor.dId"
-                    :class="['cell', 'pl20', 'pr20', index === 0 ? 'pt20' : 'pt25']"
+                    class="doctor-card"
                 >
-                    <div :class="['pb20', 'posr', 'doc', index < filteredDoctors.length - 1 ? 'bb1' : '']">
-                        <a href="javascript:;" class="img ovh" @click="viewDoctorDetail(doctor)">
-                            <img 
-                                class="all-img img-cover img-hover" 
-                                :src="doctor.avatar || defaultAvatar" 
-                                :alt="doctor.dName"
-                                @error="setDefaultDoctorImg"
-                            />
-                        </a>
-                        <div class="f14 fc9 mb5 lh24">
-                            <a href="javascript:;" class="f18 a-hover" @click="viewDoctorDetail(doctor)">
-                                {{ doctor.dName }}
-                            </a>
-                            {{ doctor.dPost || '医师' }}
+                    <!-- 头像区域 -->
+                    <div class="doctor-avatar">
+                        <img 
+                            :src="getDoctorAvatar(doctor)" 
+                            :alt="doctor.dName"
+                            @error="setDefaultDoctorImg($event, doctor)"
+                        />
+                    </div>
+                    
+                    <!-- 信息区域 -->
+                    <div class="doctor-info">
+                        <!-- 姓名+职称 -->
+                        <div class="doctor-name-title">
+                            <span class="doctor-name">{{ doctor.dName }}</span>
+                            <span class="doctor-title">{{ doctor.dPost || '医师' }}</span>
                         </div>
-                        <div class="f14 fc9 mb5">{{ doctor.dSection }} 武汉协和医院</div>
-                        <div class="lh22 f14 fc6 mb5 pt3">
-                            <p class="dib flag">
-                                好评率：<span class="yellow mr20">{{ doctor.goodRate }}%</span>
-                                关注数：<span class="yellow">{{ doctor.followers }}</span>
-                            </p>
+                        
+                        <!-- 科室 -->
+                        <div class="doctor-department">{{ doctor.dSection }} · 武汉理工大学医院</div>
+                        
+                        <!-- 好评率+关注数 -->
+                        <div class="doctor-stats">
+                            <span 
+                                class="rate-tag" 
+                                :class="{ 'high-rate': doctor.goodRate >= 90, 'low-rate': doctor.goodRate <= 0 }"
+                            >
+                                好评率：{{ doctor.goodRate }}%
+                            </span>
+                            <span class="followers-text">关注: {{ doctor.followers }}</span>
                         </div>
-                        <a 
-                            href="javascript:;" 
-                            class="f14 a-hover fc6 lh22 hid2 wbwr taj"
-                            @click="viewDoctorDetail(doctor)"
-                        >
-                            擅长：{{ doctor.dIntroduction || '暂无介绍' }}
-                        </a>
-                        <a 
-                            href="javascript:;" 
-                            style="color:#FF7C85;border-color:#FF7C85;" 
-                            class="check-detail tac f14 lh30 br6"
+                        
+                        <!-- 擅长领域 -->
+                        <div class="doctor-specialty">
+                            <span class="specialty-label">擅长：</span>
+                            <span class="specialty-content">{{ doctor.dIntroduction || '暂无介绍' }}</span>
+                        </div>
+                    </div>
+                    
+                    <!-- 按钮区域 -->
+                    <div class="doctor-actions">
+                        <button 
+                            class="btn-consult" 
                             @click="handleConsult(doctor)"
                         >
                             在线咨询
-                        </a>
-                        <a 
-                            href="javascript:;" 
-                            style="top:40px;" 
-                            class="check-detail tac f14 lh30 br6"
+                        </button>
+                        <button 
+                            class="btn-book" 
                             @click="handleBook(doctor)"
                         >
                             立即预约
-                        </a>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -186,6 +198,9 @@ export default {
         return {
             activeCategory: "全部", // 当前选中的大类
             activeSection: "全部", // 当前选中的细分科室
+            hoveredCategory: null, // 当前悬停的科室大类
+            isHoveringSubSection: false, // 是否正在悬停细分科室区域
+            hoverTimer: null, // 悬停定时器
             isCollapsed: false,
             defaultVisibleCount: 6, // 收起时默认显示的大类数量（不包括"全部"）
             // 科室大类
@@ -264,10 +279,26 @@ export default {
             size: 10,
             total: 0,
             loading: false,
-            defaultAvatar: require("@/assets/logo.png")
+            defaultAvatar: require("@/assets/logo.png"),
+            defaultBoy: require("@/assets/boy.png"),
+            defaultGirl: require("@/assets/girl.png")
         };
     },
     methods: {
+        // 根据性别获取默认头像
+        getGenderDefault(doctor) {
+            const gender = doctor?.dGender || doctor?.dSex || doctor?.gender || doctor?.sex;
+            // 判断是否为女性：包含"女"或等于"female"或等于"0"（某些系统用0表示女）
+            if (gender && (String(gender).includes("女") || String(gender).toLowerCase() === "female" || String(gender) === "0")) {
+                return this.defaultGirl;
+            }
+            // 默认返回男性头像
+            return this.defaultBoy;
+        },
+        // 获取医生头像，直接根据性别选择boy.png或girl.png
+        getDoctorAvatar(doctor) {
+            return this.getGenderDefault(doctor);
+        },
         loadDoctors() {
             this.loading = true;
             const params = {
@@ -441,19 +472,21 @@ export default {
             // 这里可以跳转到医生详情页面或打开详情对话框
         },
         handleConsult(doctor) {
-            this.$message.info(`正在为${doctor.dName}医生建立在线咨询`);
-            // 这里可以跳转到在线咨询页面或打开咨询对话框
+            // 跳转到智能助手界面
+            this.$router.push({
+                path: '/aiChat'
+            });
         },
         handleBook(doctor) {
             // 跳转到预约页面
             this.$router.push({
-                path: '/patient/bookNow',
+                path: '/bookNow',
                 query: { dId: doctor.dId }
             });
         },
-        setDefaultDoctorImg(event) {
-            // 设置默认头像
-            event.target.src = this.defaultAvatar;
+        setDefaultDoctorImg(event, doctor) {
+            // 设置默认头像（性别优先）
+            event.target.src = this.getGenderDefault(doctor) || this.defaultAvatar;
         },
         toggleCollapse() {
             this.isCollapsed = !this.isCollapsed;
@@ -468,6 +501,59 @@ export default {
             this.activeSection = section;
             this.pageNumber = 1;
             this.loadDoctors();
+        },
+        // 处理科室大类悬停
+        handleCategoryHover(category) {
+            if (category !== '全部') {
+                this.hoveredCategory = category;
+            }
+        },
+        // 处理科室大类离开
+        handleCategoryLeave() {
+            // 延迟隐藏，避免鼠标移动到细分科室时立即隐藏
+            this.hoverTimer = setTimeout(() => {
+                if (!this.isHoveringSubSection) {
+                    this.hoveredCategory = null;
+                }
+            }, 150);
+        },
+        // 处理细分科室区域悬停
+        handleSubSectionHover() {
+            // 清除隐藏定时器
+            if (this.hoverTimer) {
+                clearTimeout(this.hoverTimer);
+            }
+            this.isHoveringSubSection = true;
+        },
+        // 处理细分科室区域离开
+        handleSubSectionLeave() {
+            this.isHoveringSubSection = false;
+            this.hoveredCategory = null;
+        },
+        // 获取指定科室大类的细分科室
+        getSubSectionsForCategory(category) {
+            if (category === '全部' || !category) {
+                return [];
+            }
+            // 根据大类返回对应的细分科室
+            return this.allSections.filter(section => {
+                const sectionCategory = this.sectionCategoryMap[section];
+                // 映射大类名称
+                const categoryMap = {
+                    "内科": "内科",
+                    "外科": "外科",
+                    "妇产科学": "妇产科",
+                    "儿科学": "儿科",
+                    "骨外科": "外科", // 骨外科属于外科
+                    "眼科学": "五官科",
+                    "口腔科学": "五官科",
+                    "五官科": "五官科",
+                    "肿瘤科": "其他",
+                    "皮肤性病科": "其他",
+                    "中医学": "中医科"
+                };
+                return sectionCategory === categoryMap[category];
+            });
         }
     },
     computed: {
@@ -525,8 +611,208 @@ export default {
 
 <style scoped lang="scss">
 .doctor-team-container {
-    background:rgb(255, 255, 255);
+    background: #ffffff;
     min-height: calc(100vh - 70px);
+}
+
+// 主体内容区域
+.doctor-content-wrapper {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+// 标题栏
+.title-bar {
+    background: #E6F7FF;
+    height: 50px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 0 20px;
+    margin-bottom: 20px;
+    border-radius: 8px;
+    
+    .main-title {
+        font-size: 24px;
+        font-weight: bold;
+        color: #333;
+        margin: 0;
+        line-height: 1.2;
+    }
+    
+    .sub-title {
+        font-size: 14px;
+        color: #999;
+        margin: 4px 0 0 0;
+        line-height: 1.2;
+    }
+}
+
+// 医生列表网格布局
+.doctor-list-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 30px;
+    width: 100%;
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 0 20px;
+    box-sizing: border-box;
+    
+    @media (max-width: 768px) {
+        grid-template-columns: 1fr;
+        gap: 20px;
+        padding: 0 20px;
+    }
+}
+
+// 医生卡片
+.doctor-card {
+    background: #ffffff;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    
+    &:hover {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        transform: translateY(-2px);
+    }
+    
+    // 头像区域
+    .doctor-avatar {
+        width: 80px;
+        height: 80px;
+        margin: 0 auto 16px;
+        border-radius: 50%;
+        overflow: hidden;
+        background: #f5f5f5;
+        
+        img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+    }
+    
+    // 信息区域
+    .doctor-info {
+        margin-bottom: 16px;
+        
+        .doctor-name-title {
+            margin-bottom: 8px;
+            
+            .doctor-name {
+                font-size: 18px;
+                font-weight: 500;
+                color: #333;
+                margin-right: 8px;
+            }
+            
+            .doctor-title {
+                font-size: 14px;
+                font-weight: bold;
+                color: #1890FF;
+            }
+        }
+        
+        .doctor-department {
+            font-size: 14px;
+            color: #999;
+            margin-bottom: 12px;
+        }
+        
+        .doctor-stats {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+            
+            .rate-tag {
+                padding: 4px 8px;
+                border-radius: 4px;
+                font-size: 12px;
+                background: #f4f7fb;
+                color: #5f7899;
+                
+                &.high-rate {
+                    background: #e8f5ec;
+                    color: #3c8555;
+                }
+                
+                &.low-rate {
+                    background: #fdeeee;
+                    color: #d46b6b;
+                }
+            }
+            
+            .followers-text {
+                font-size: 12px;
+                color: #999;
+            }
+        }
+        
+        .doctor-specialty {
+            font-size: 14px;
+            color: #333;
+            line-height: 1.5;
+            
+            .specialty-label {
+                color: #6fa4d6;
+            }
+            
+            .specialty-content {
+                color: #333;
+            }
+        }
+    }
+    
+    // 按钮区域
+    .doctor-actions {
+        display: flex;
+        gap: 10px;
+        
+        button {
+            flex: 1;
+            padding: 8px 16px;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+            border: none;
+        }
+        
+        .btn-consult {
+            background: #ffffff;
+            color: #6fa4d6;
+            border: 1px solid #c4d9f0;
+            
+            &:hover {
+                background: #f4f8fc;
+                border-color: #b6cbe6;
+            }
+        }
+        
+        .btn-book {
+            background: #8fb6e0;
+            color: #ffffff;
+            
+            &:hover {
+                background: #7aa6d4;
+            }
+        }
+    }
+}
+
+// 加载状态
+.loading-container {
+    text-align: center;
+    padding: 40px 0;
+    color: #1890FF;
 }
 
 // 顶部科室标签栏样式（按照提供的HTML结构）
@@ -613,6 +899,11 @@ export default {
     li {
         margin-right: 20px;
         margin-bottom: 5px;
+        position: relative;
+        
+        &.category-item {
+            position: relative;
+        }
         
         .a {
             display: block;
@@ -621,6 +912,7 @@ export default {
             text-decoration: none;
             border-radius: 4px;
             transition: all 0.3s ease;
+            position: relative;
             
             &.a-hover:hover {
                 color: #409EFF;
@@ -657,11 +949,14 @@ export default {
 }
 
 .son-body {
-    background:#F2F5F7;
+    background: #F2F5F7;
     border-radius: 6px;
     padding-left: 15px;
-    padding-top: 5px;
-    padding-bottom: 5px;
+    padding-top: 8px;
+    padding-bottom: 8px;
+    margin-top: 5px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    border: 1px solid #e4e7ed;
     
     ul {
         list-style: none;
@@ -676,6 +971,8 @@ export default {
                 color: #999;
                 text-decoration: none;
                 transition: all 0.3s ease;
+                padding: 4px 8px;
+                border-radius: 4px;
                 
                 &.green {
                     color: #66b1ff;
@@ -684,6 +981,7 @@ export default {
                 
                 &:hover {
                     color: #409EFF;
+                    background: rgba(64, 158, 255, 0.1);
                 }
             }
         }

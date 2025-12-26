@@ -38,7 +38,13 @@
                             @click="viewDepartmentDetail(section)"
                         >
                             <div class="posr ks-name mb15">
-                                <div :class="['icon-ks', `bj${index % 3}`]"></div>
+                                <div class="icon-ks">
+                                    <img 
+                                        :src="getSectionImage(section.name)" 
+                                        :alt="section.name"
+                                        @error="handleImageError"
+                                    />
+                                </div>
                                 <h4 class="fn ellipsis f20 lh30 mb5">{{ section.name }}</h4>
                                 <p class="f14 fc9">医生{{ section.doctorCount }}位</p>
                             </div>
@@ -174,7 +180,36 @@ export default {
             detailDialogVisible: false,
             currentDepartment: null,
             // 科室详情数据
-            departmentDetails: {}
+            departmentDetails: {},
+            // 科室图片映射
+            sectionImages: {
+                "神经内科": require("@/assets/departments/k1.png"),
+                "呼吸与危重症医学科": require("@/assets/departments/k2.png"),
+                "内分泌科": require("@/assets/departments/k3.png"),
+                "消化内科": require("@/assets/departments/k4.png"),
+                "心血管内科": require("@/assets/departments/k5.png"),
+                "肾内科": require("@/assets/departments/k6.png"),
+                "发热门诊": require("@/assets/departments/k7.png"),
+                "手足外科": require("@/assets/departments/k8.png"),
+                "普通外科": require("@/assets/departments/k9.png"),
+                "肛肠外科": require("@/assets/departments/k10.png"),
+                "神经外科": require("@/assets/departments/k11.png"),
+                "泌尿外科": require("@/assets/departments/k12.png"),
+                "骨科": require("@/assets/departments/k13.png"),
+                "烧伤整形外科": require("@/assets/departments/k14.png"),
+                "妇科": require("@/assets/departments/k15.png"),
+                "产科": require("@/assets/departments/k16.png"),
+                "儿科": require("@/assets/departments/k17.png"),
+                "儿童保健科": require("@/assets/departments/k18.png"),
+                "耳鼻咽喉科": require("@/assets/departments/k19.png"),
+                "眼科": require("@/assets/departments/k20.png"),
+                "口腔科": require("@/assets/departments/k21.png"),
+                "中医科": require("@/assets/departments/k22.png"),
+                "康复医学科": require("@/assets/departments/k23.png"),
+                "急诊科": require("@/assets/departments/k24.png"),
+                "皮肤性病科": require("@/assets/departments/k25.png"),
+                "功能科": require("@/assets/departments/k26.png")
+            }
         };
     },
     computed: {
@@ -184,6 +219,20 @@ export default {
         }
     },
     methods: {
+        // 获取科室图片
+        getSectionImage(sectionName) {
+            const imageUrl = this.sectionImages[sectionName];
+            // 如果图片地址为空，使用默认logo
+            if (!imageUrl || imageUrl.trim() === "") {
+                return require("@/assets/logo.png");
+            }
+            return imageUrl;
+        },
+        // 图片加载错误处理
+        handleImageError(event) {
+            // 如果图片加载失败，使用默认logo
+            event.target.src = require("@/assets/logo.jpg");
+        },
         viewDepartmentDetail(dept) {
             this.currentDepartment = dept;
             this.detailDialogVisible = true;
@@ -840,17 +889,15 @@ export default {
             height: 60px;
             border-radius: 8px;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden;
+            background: #f5f7fa;
+            border: 1px solid rgba(0, 0, 0, 0.05);
             
-            &.bj0 {
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            }
-            
-            &.bj1 {
-                background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-            }
-            
-            &.bj2 {
-                background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+                display: block;
             }
         }
         
