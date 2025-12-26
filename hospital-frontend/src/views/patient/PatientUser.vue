@@ -49,6 +49,7 @@ export default {
                 { label: "医院介绍", path: "hospitalIntro" },
                 { label: "科室导航", path: "departmentNav" },
                 { label: "医生团队", path: "doctorTeam" },
+                { label: "智能助手", path: "aiChat" },
                 { label: "诊疗评价", path: "treatmentReviews" },
                 { label: "我的预约", path: "myAppointments" },
             ],
@@ -122,6 +123,8 @@ export default {
                 this.activePath = "departmentNav";
             } else if (to.path.includes("doctorTeam")) {
                 this.activePath = "doctorTeam";
+            } else if (to.path.includes("aiChat")) {
+                this.activePath = "aiChat";
             } else if (to.path.includes("treatmentReviews")) {
                 this.activePath = "treatmentReviews";
             } else if (to.path.includes("myAppointments")) {

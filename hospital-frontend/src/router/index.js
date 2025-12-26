@@ -39,6 +39,7 @@ import DoctorTeam from "@/views/patient/DoctorTeam.vue";
 import TreatmentReviews from "@/views/patient/TreatmentReviews.vue";
 import MyAppointments from "@/views/patient/MyAppointments.vue";
 import BookNow from "@/views/patient/BookNow.vue";
+import AiChat from "@/views/patient/AiChat.vue";
 
 Vue.prototype.$echarts = echarts;//引入echarts
 Vue.use(ElementUI);
@@ -190,6 +191,13 @@ const routes = [
       {
         path: "/bookNow",
         component: BookNow,
+        meta: {
+          requireAuth: true,
+        },
+      },
+      {
+        path: "/aiChat",
+        component: AiChat,
         meta: {
           requireAuth: true,
         },
