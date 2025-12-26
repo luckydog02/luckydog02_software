@@ -155,11 +155,14 @@ public class OrderController {
     /**
      * 获取挂号时间段
      *
-     * @param arId 排班id
+     * @param arId 排班id（支持Integer和String类型自动转换）
      * @return 时间段
      */
     @RequestMapping("findOrderTime")
-    public R<OrderArrangeVo> findOrderTime(String arId) {
+    public R<OrderArrangeVo> findOrderTime(@RequestParam(value = "arId") String arId) {
+        if (arId == null || arId.isEmpty()) {
+            return R.error("排班ID不能为空");
+        }
         return R.ok(orderService.findOrderTime(arId));
     }
 

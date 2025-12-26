@@ -9,6 +9,7 @@ import com.shanzhu.hospital.service.DoctorUserService;
 import com.shanzhu.hospital.service.OrderService;
 import com.shanzhu.hospital.service.PatientUserService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.ibatis.annotations.Param;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -21,6 +22,7 @@ import java.util.List;
  * 医生相关 控制层
  *
  */
+@Slf4j
 @RestController
 @RequestMapping("doctor")
 @RequiredArgsConstructor
@@ -94,11 +96,27 @@ public class DoctorUserController {
     public R<DoctorPageVo> findDoctorBySectionPage(
             @RequestParam(value = "pageNumber") Integer pageNum,
             @RequestParam(value = "size") Integer pageSize,
-            @RequestParam(value = "query") String dName,
-            @RequestParam(value = "arrangeDate") String arrangeDate,
+            @RequestParam(value = "query", required = false, defaultValue = "") String dName,
+            @RequestParam(value = "arrangeDate", required = false, defaultValue = "") String arrangeDate,
             @RequestParam(value = "dSection") String dSection
     ) {
-        return R.ok(doctorUserService.findDoctorBySectionPage(pageNum, pageSize, dName, arrangeDate, dSection));
+        // 如果dSection为空，返回错误
+        if (dSection == null || dSection.trim().isEmpty()) {
+            log.warn("科室参数为空");
+            return R.error("科室参数不能为空");
+        }
+        
+        String trimmedSection = dSection.trim();
+        log.info("查询科室医生 - 科室: [{}], 页码: {}, 每页: {}, 医生名: [{}], 排班日期: [{}]", 
+                trimmedSection, pageNum, pageSize, dName, arrangeDate);
+        
+        DoctorPageVo result = doctorUserService.findDoctorBySectionPage(
+                pageNum, pageSize, dName, arrangeDate, trimmedSection);
+        
+        log.info("查询结果 - 总数: {}, 当前页数据量: {}", 
+                result.getTotal(), result.getDoctors() != null ? result.getDoctors().size() : 0);
+        
+        return R.ok(result);
     }
 
     /**
@@ -127,6 +145,34 @@ public class DoctorUserController {
     public R<Integer> visitCount(@RequestParam("dId") Integer dId) {
         Integer count = orderService.calcDoctorVisitCount(dId);
         return R.ok(count);
+    }
+
+    /**
+     * 调试接口：获取所有科室及其医生数量
+     *
+     * @return 科室统计信息
+     */
+    @RequestMapping("debug/allSections")
+    public R<java.util.Map<String, Object>> debugAllSections() {
+        // 使用getAllSectionsWithDoctorCount方法获取科室信息
+        List<com.shanzhu.hospital.entity.vo.SectionVo> sections = doctorUserService.getAllSectionsWithDoctorCount();
+        
+        java.util.Map<String, Long> sectionCount = new java.util.HashMap<>();
+        java.util.List<String> allSectionNames = new java.util.ArrayList<>();
+        
+        for (com.shanzhu.hospital.entity.vo.SectionVo section : sections) {
+            sectionCount.put(section.getSectionName(), (long) section.getDoctorCount());
+            allSectionNames.add(section.getSectionName());
+        }
+        
+        java.util.Map<String, Object> result = new java.util.HashMap<>();
+        result.put("sections", sectionCount);
+        result.put("allSectionNames", allSectionNames);
+        result.put("totalSections", sections.size());
+        
+        log.info("调试接口返回 - 科室数量: {}, 科室列表: {}", sections.size(), allSectionNames);
+        
+        return R.ok(result);
     }
 
 }

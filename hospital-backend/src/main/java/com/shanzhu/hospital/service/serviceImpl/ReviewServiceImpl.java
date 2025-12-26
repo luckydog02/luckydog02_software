@@ -12,6 +12,7 @@ import com.shanzhu.hospital.service.ReviewService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 /**
  * 评价相关 服务层实现
@@ -55,12 +56,53 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
      */
     @Override
     public Boolean addReview(Review review) {
-        // 设置评价时间
-        if (review.getRTime() == null) {
-            review.setRTime(java.time.LocalDateTime.now());
+        try {
+            // 设置评价时间
+            if (review.getRTime() == null) {
+                review.setRTime(java.time.LocalDateTime.now());
+            }
+            
+            // 如果评价内容为空，设置默认值
+            if (!StringUtils.hasText(review.getRContent())) {
+                review.setRContent("暂无评价内容");
+            }
+            
+            log.info("保存评价数据：pId={}, dId={}, oId={}, rStar={}, rContent={}", 
+                    review.getPId(), review.getDId(), review.getOId(), 
+                    review.getRStar(), review.getRContent());
+            
+            // 保存评价
+            boolean result = this.save(review);
+            
+            if (result) {
+                log.info("评价保存成功，评价ID：{}", review.getRId());
+            } else {
+                log.error("评价保存失败：pId={}, dId={}, oId={}", 
+                        review.getPId(), review.getDId(), review.getOId());
+            }
+            
+            return result;
+        } catch (Exception e) {
+            log.error("保存评价异常：", e);
+            throw e;
         }
-        // 保存评价
-        return this.save(review);
+    }
+
+    /**
+     * 检查订单是否已评价
+     *
+     * @param oId 订单ID
+     * @return 是否已评价
+     */
+    @Override
+    public Boolean checkReviewByOId(Integer oId) {
+        if (oId == null) {
+            return false;
+        }
+        LambdaQueryWrapper<Review> wrapper = Wrappers.lambdaQuery();
+        wrapper.eq(Review::getOId, oId);
+        long count = this.count(wrapper);
+        return count > 0;
     }
 }
 

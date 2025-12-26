@@ -147,7 +147,7 @@ public interface OrderService {
     /**
      * 获取挂号时间段
      *
-     * @param arId 排班id
+     * @param arId 排班id（String类型，支持从Integer自动转换）
      * @return 时间段
      */
     OrderArrangeVo findOrderTime(String arId);

@@ -191,6 +191,10 @@ public class DoctorUserServiceImpl extends ServiceImpl<DoctorUserMapper, Doctor>
         //组装数据
         DoctorListVo doctorListVo = new DoctorListVo();
         doctorListVo.setDoctors(doctors);
+        // 设置分页信息（虽然这是列表查询，但为了兼容性添加）
+        doctorListVo.setTotal((long) doctors.size());
+        doctorListVo.setPageNumber(1L);
+        doctorListVo.setPageSize(doctors.size());
 
         return doctorListVo;
 
@@ -210,41 +214,50 @@ public class DoctorUserServiceImpl extends ServiceImpl<DoctorUserMapper, Doctor>
     public DoctorPageVo findDoctorBySectionPage(
             Integer pageNum, Integer pageSize, String dName, String arrangeDate, String dSection
     ) {
+        log.info("开始查询科室医生 - 科室: {}, 页码: {}, 每页: {}, 医生名: {}", 
+                dSection, pageNum, pageSize, dName);
+        
         //分页条件
         Page<Doctor> page = new Page<>(pageNum, pageSize);
 
         //查询条件
         LambdaQueryWrapper<Doctor> lambdaQuery = Wrappers.<Doctor>lambdaQuery()
-                //模糊匹配医生名字
-                .like(Doctor::getDName, dName)
-                //科室
+                //模糊匹配医生名字（只有当dName不为空时才添加此条件）
+                .like(org.springframework.util.StringUtils.hasText(dName), Doctor::getDName, dName)
+                //科室（必须精确匹配）
                 .eq(Doctor::getDSection, dSection)
+                //在职状态（只查询在职医生）
+                .eq(Doctor::getDState, 1)
                 //按在职状态排序
                 .orderByDesc(Doctor::getDState);
 
         //分页查询
         IPage<Doctor> iPage = this.page(page, lambdaQuery);
+        
+        log.info("查询到 {} 条记录，总记录数: {}", iPage.getRecords().size(), iPage.getTotal());
 
         //组装分页结果
         DoctorPageVo pageVo = new DoctorPageVo();
         pageVo.populatePage(iPage);
 
-        //查询医生是否已排班
-        List<Doctor> records = iPage.getRecords();
-        for (Doctor doctor : records) {
-            //查询条件
-            LambdaQueryWrapper<Arrange> arrangeQuery = Wrappers.<Arrange>lambdaQuery()
-                    //排班时间
-                    .eq(Arrange::getArTime, arrangeDate)
-                    //医生id
-                    .eq(Arrange::getDId, doctor.getDId());
+        //查询医生是否已排班（只有当arrangeDate不为空时才查询排班信息）
+        if (org.springframework.util.StringUtils.hasText(arrangeDate)) {
+            List<Doctor> records = iPage.getRecords();
+            for (Doctor doctor : records) {
+                //查询条件
+                LambdaQueryWrapper<Arrange> arrangeQuery = Wrappers.<Arrange>lambdaQuery()
+                        //排班时间
+                        .eq(Arrange::getArTime, arrangeDate)
+                        //医生id
+                        .eq(Arrange::getDId, doctor.getDId());
 
-            //查询医生排班
-            Arrange arrange = arrangeMapper.selectOne(arrangeQuery);
+                //查询医生排班
+                Arrange arrange = arrangeMapper.selectOne(arrangeQuery);
 
-            if (arrange != null) {
-                //设置医生的排班信息
-                doctor.setArrangeId(arrange.getArId());
+                if (arrange != null) {
+                    //设置医生的排班信息
+                    doctor.setArrangeId(arrange.getArId());
+                }
             }
         }
 
@@ -272,37 +285,71 @@ public class DoctorUserServiceImpl extends ServiceImpl<DoctorUserMapper, Doctor>
         // 定义所有科室及其分类和描述
         Map<String, SectionVo> sectionMap = new java.util.HashMap<>();
         
-        // 科室分类映射
+        // 固定的科室列表
+        List<String> fixedSections = java.util.Arrays.asList(
+            "神经内科",
+            "呼吸与危重症医学科",
+            "内分泌科",
+            "消化内科",
+            "心血管内科",
+            "肾内科",
+            "发热门诊",
+            "手足外科",
+            "普通外科",
+            "肛肠外科",
+            "神经外科",
+            "泌尿外科",
+            "骨科",
+            "烧伤整形外科",
+            "妇科",
+            "产科",
+            "儿科",
+            "儿童保健科",
+            "耳鼻咽喉科",
+            "眼科",
+            "口腔科",
+            "中医科",
+            "康复医学科",
+            "急诊科",
+            "皮肤性病科",
+            "功能科"
+        );
+        
+        // 科室分类映射（按照新的分类标准）
         Map<String, String> categoryMap = new java.util.HashMap<>();
-        categoryMap.put("血液科", "内科");
+        // 内科
         categoryMap.put("神经内科", "内科");
-        categoryMap.put("心血管内科", "内科");
         categoryMap.put("呼吸与危重症医学科", "内科");
         categoryMap.put("内分泌科", "内科");
         categoryMap.put("消化内科", "内科");
+        categoryMap.put("心血管内科", "内科");
         categoryMap.put("肾内科", "内科");
         categoryMap.put("发热门诊", "内科");
+        // 外科
         categoryMap.put("手足外科", "外科");
         categoryMap.put("普通外科", "外科");
         categoryMap.put("肛肠外科", "外科");
         categoryMap.put("神经外科", "外科");
         categoryMap.put("泌尿外科", "外科");
+        categoryMap.put("骨科", "外科");
         categoryMap.put("烧伤整形外科", "外科");
-        categoryMap.put("骨科", "骨外科");
-        categoryMap.put("妇科", "妇产科学");
-        categoryMap.put("产科", "妇产科学");
-        categoryMap.put("儿科", "儿科学");
-        categoryMap.put("儿童保健科", "儿科学");
+        // 妇产科
+        categoryMap.put("妇科", "妇产科");
+        categoryMap.put("产科", "妇产科");
+        // 儿科
+        categoryMap.put("儿科", "儿科");
+        categoryMap.put("儿童保健科", "儿科");
+        // 五官科
         categoryMap.put("耳鼻咽喉科", "五官科");
-        categoryMap.put("眼科", "眼科学");
-        categoryMap.put("口腔科", "口腔科学");
-        categoryMap.put("中医科", "中医学");
-        categoryMap.put("急诊科", "其他科室");
-        categoryMap.put("皮肤性病科", "皮肤性病科");
-        categoryMap.put("康复医学科", "康复医学科");
-        categoryMap.put("营养科", "营养科");
-        categoryMap.put("麻醉医学科", "麻醉医学科");
-        categoryMap.put("医学影像科", "医学影像科");
+        categoryMap.put("眼科", "五官科");
+        categoryMap.put("口腔科", "五官科");
+        // 中医科
+        categoryMap.put("中医科", "中医科");
+        // 其他
+        categoryMap.put("康复医学科", "其他");
+        categoryMap.put("急诊科", "其他");
+        categoryMap.put("皮肤性病科", "其他");
+        categoryMap.put("功能科", "其他");
 
         // 科室描述映射
         Map<String, String> descriptionMap = new java.util.HashMap<>();
@@ -332,9 +379,7 @@ public class DoctorUserServiceImpl extends ServiceImpl<DoctorUserMapper, Doctor>
         descriptionMap.put("急诊科", "24小时提供急诊医疗服务，及时救治急危重症患者。");
         descriptionMap.put("皮肤性病科", "专业治疗皮肤疾病和性病，拥有丰富的临床经验。");
         descriptionMap.put("康复医学科", "提供康复医疗服务，帮助患者恢复功能。");
-        descriptionMap.put("营养科", "提供营养咨询和指导服务，促进患者健康。");
-        descriptionMap.put("麻醉医学科", "提供麻醉医疗服务，保障手术安全。");
-        descriptionMap.put("医学影像科", "提供医学影像检查服务，为临床诊断提供支持。");
+        descriptionMap.put("功能科", "提供功能检查服务，为临床诊断提供支持。");
 
         // 查询所有在职医生的科室
         List<Doctor> doctors = lambdaQuery()
@@ -350,17 +395,15 @@ public class DoctorUserServiceImpl extends ServiceImpl<DoctorUserMapper, Doctor>
             }
         }
 
-        // 获取所有唯一的科室名称
-        java.util.Set<String> allSections = new java.util.HashSet<>(doctorCountMap.keySet());
-        // 添加可能没有医生的科室（从categoryMap中获取）
-        allSections.addAll(categoryMap.keySet());
+        // 使用固定的科室列表，确保所有科室都显示
+        java.util.Set<String> allSections = new java.util.HashSet<>(fixedSections);
 
-        // 构建科室列表
+        // 构建科室列表（按照固定顺序）
         List<SectionVo> sectionList = new java.util.ArrayList<>();
-        for (String sectionName : allSections) {
+        for (String sectionName : fixedSections) {
             SectionVo sectionVo = new SectionVo();
             sectionVo.setSectionName(sectionName);
-            sectionVo.setCategory(categoryMap.getOrDefault(sectionName, "其他科室"));
+            sectionVo.setCategory(categoryMap.getOrDefault(sectionName, "其他"));
             sectionVo.setDoctorCount(doctorCountMap.getOrDefault(sectionName, 0));
             sectionVo.setDescription(descriptionMap.getOrDefault(sectionName, "专业医疗服务"));
             
@@ -370,8 +413,14 @@ public class DoctorUserServiceImpl extends ServiceImpl<DoctorUserMapper, Doctor>
                 sectionVo.setColor("#f56c6c");
             } else if ("外科".equals(category)) {
                 sectionVo.setColor("#409EFF");
-            } else if ("骨外科".equals(category)) {
+            } else if ("妇产科".equals(category)) {
+                sectionVo.setColor("#F56C6C");
+            } else if ("儿科".equals(category)) {
                 sectionVo.setColor("#67c23a");
+            } else if ("五官科".equals(category)) {
+                sectionVo.setColor("#E6A23C");
+            } else if ("中医科".equals(category)) {
+                sectionVo.setColor("#E6A23C");
             } else {
                 sectionVo.setColor("#909399");
             }

@@ -26,5 +26,13 @@ public interface ReviewService {
      */
     Boolean addReview(com.shanzhu.hospital.entity.po.Review review);
 
+    /**
+     * 检查订单是否已评价
+     *
+     * @param oId 订单ID
+     * @return 是否已评价
+     */
+    Boolean checkReviewByOId(Integer oId);
+
 }
 

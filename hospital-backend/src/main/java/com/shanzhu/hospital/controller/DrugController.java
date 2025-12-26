@@ -41,11 +41,14 @@ public class DrugController {
     /**
      * 查询药物
      *
-     * @param drId 药物id
+     * @param drId 药物id（支持Integer和String类型自动转换）
      * @return 药物信息
      */
     @RequestMapping("findDrug")
-    public R<Drug> findDrug(int drId) {
+    public R<Drug> findDrug(@RequestParam(value = "drId") Integer drId) {
+        if (drId == null) {
+            return R.error("药物ID不能为空");
+        }
         return R.ok(drugService.findDrug(drId));
     }
 

@@ -16,6 +16,21 @@ public class DoctorListVo {
      * 医生列表
      */
     private List<Doctor> doctors;
+
+    /**
+     * 总条数（用于分页）
+     */
+    private Long total;
+
+    /**
+     * 当前页码（用于分页）
+     */
+    private Long pageNumber;
+
+    /**
+     * 每页大小（用于分页）
+     */
+    private Integer pageSize;
 }
 
   

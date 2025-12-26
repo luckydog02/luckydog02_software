@@ -57,12 +57,21 @@ public class PatientUserController {
     /**
      * 通过科室查询医生
      *
-     * @param dSection 科室
+     * @param dSection 科室（支持dSection和section两个参数名）
+     * @param section  科室（兼容参数名）
      * @return 医生列表
      */
     @RequestMapping("findDoctorBySection")
-    public R<DoctorListVo> findDoctorBySection(@RequestParam(value = "dSection") String dSection) {
-        return R.ok(doctorUserService.findDoctorBySection(dSection));
+    public R<DoctorListVo> findDoctorBySection(
+            @RequestParam(value = "dSection", required = false) String dSection,
+            @RequestParam(value = "section", required = false) String section
+    ) {
+        // 支持dSection和section两个参数名，优先使用dSection
+        String sectionName = dSection != null ? dSection : section;
+        if (sectionName == null || sectionName.isEmpty()) {
+            return R.error("科室参数不能为空");
+        }
+        return R.ok(doctorUserService.findDoctorBySection(sectionName));
     }
 
     /**

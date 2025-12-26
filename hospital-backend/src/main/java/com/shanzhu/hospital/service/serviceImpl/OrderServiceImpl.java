@@ -175,12 +175,16 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Orders> implement
      */
     @Override
     public Boolean updatePrice(Integer oId) {
-        return lambdaUpdate()
-                //更新缴费状态1
-                .set(Orders::getOPriceState, 1)
-                //更新费用0
-                .set(Orders::getOTotalPrice, 0.00)
-                .update();
+        // 先查询订单信息，保留原有费用
+        Orders order = this.getById(oId);
+        if (order == null) {
+            return Boolean.FALSE;
+        }
+        
+        // 更新缴费状态为已缴费，但保留原有费用（不将费用清零）
+        // 只更新缴费状态，不修改费用字段
+        order.setOPriceState(1);
+        return this.updateById(order);
     }
 
     /**
@@ -328,6 +332,10 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Orders> implement
     public OrderArrangeVo findOrderTime(String arId) {
         //查询排班信息
         Arrange arrange = arrangeMapper.selectById(arId);
+        
+        if (arrange == null) {
+            throw new RuntimeException("排班信息不存在，arId: " + arId);
+        }
 
         OrderArrangeVo orderArrangeVo = new OrderArrangeVo();
         orderArrangeVo.setOrderDate(arrange.getArTime());
