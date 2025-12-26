@@ -126,6 +126,18 @@ export default {
       var myChart = this.$echarts.init(document.getElementById("orderGender"));
       request.get("order/orderGender",)
       .then(res => {
+        // 修复硬编码索引问题，使用数据驱动方式
+        const genderData = res.data.data || [];
+        const chartData = genderData.map(item => ({
+          value: item.countGender || 0,
+          name: item.patient?.pGender || '未知'
+        }));
+        
+        // 如果没有数据，显示提示
+        if (chartData.length === 0) {
+          chartData.push({value: 0, name: '暂无数据'});
+        }
+        
       var option = {
                 title: {
                     text: '患者性别比例',
@@ -143,11 +155,7 @@ export default {
                         name: '人数',
                         type: 'pie',
                         radius: '50%',
-                        data: [
-                            {value: res.data.data.map((item) => item.countGender)[0], name: res.data.data.map((item) => item.patient.pGender)[0]},
-                            {value: res.data.data.map((item) => item.countGender)[1], name: res.data.data.map((item) => item.patient.pGender)[1]},
-
-                        ],
+                        data: chartData,
                         emphasis: {
                             itemStyle: {
                                 shadowBlur: 10,

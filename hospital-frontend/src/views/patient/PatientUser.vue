@@ -7,7 +7,7 @@
       <!-- 固定顶部导航栏 -->
       <div class="fixed-navbar">
         <div class="navbar-left">
-          <img src="../../assets/logo.png" class="hospital-logo" alt="医院图标"/>
+          <img src="../../assets/hospital.png" class="hospital-logo" alt="医院图标"/>
         </div>
         <div class="navbar-center">
           <div 
@@ -159,8 +159,8 @@ export default {
         align-items: center;
         
         .hospital-logo {
-            width: 50px;
-            height: 50px;
+            width: 250px;
+            height: 30px;
         }
     }
     

@@ -4,48 +4,63 @@
 -->
 <template>
     <div class="hospital-intro-container">
-        <!-- 主界面卡片 -->
-        <div class="main-card">
-            <div class="card-left">
-                <h3>医院简介</h3>
-                <p>{{ hospitalIntro }}</p>
-            </div>
-            <div class="card-right">
-                <div class="user-info-card">
-                    <h4>个人信息</h4>
-                    <div class="info-item">
-                        <span class="label">姓名：</span>
-                        <span class="value">{{ patientInfo.pName }}</span>
+        <!-- 医院信息顶部 -->
+        <div class="index-hospital-info-top posr">
+            <div class="info">
+                <div class="w1200 pt30 clr">
+                    <a href="javascript:;" class="fll hospital-logo mr20 ovh">
+                        <img class="all-img img-cover" alt="武汉协和医院" src="@/assets/logo.png">
+                    </a>
+                    <div class="fll">
+                        <a href="javascript:;" class="f28 db lh38 fcf mb10">武汉理工大学医院</a>
+                        <div class="flag mb15 green lh22">
+                            <span class="br4 dib bw pl10 pr10">综合医院</span>
+                            <span class="br4 dib bw pl10 pr10">公立</span>
+                            <span class="br4 dib bw pl10 pr10">医保</span>
+                            <span class="br4 dib bw pl10 pr10">三甲</span>
+                        </div>
+                        <div class="f16 fcf mb10 opc9">全称：华中科技大学同济医学院附属协和医院</div>
                     </div>
-                    <div class="info-item">
-                        <span class="label">手机号：</span>
-                        <span class="value">{{ patientInfo.pPhone }}</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="label">身份证号：</span>
-                        <span class="value">{{ patientInfo.pCard }}</span>
+                    <div class="flr link-tel pl20 pr20 mr20 f16 mt15 pb20 pt20 br6">
+                        <p class="lh28 top-icon-email pl32">纠正信息请发送需求至</p>
+                        <p class="lh28 pl32">
+                            <a href="javascript:;" class="green">whut_xyy@qq.com</a>
+                        </p>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- 医院介绍卡片（与主卡片重叠） -->
-        <div class="intro-card">
-            <div class="intro-left">
-                <h2>医院介绍</h2>
-                <p class="intro-text">{{ hospitalIntro }}</p>
-                <el-button type="text" class="more-btn" @click="showFullIntro = true">
-                    查看更多 <i class="el-icon-arrow-right"></i>
-                </el-button>
-            </div>
-            <div class="intro-right">
-                <el-carousel :interval="4000" type="card" height="300px">
-                    <el-carousel-item v-for="(item, index) in carouselImages" :key="index">
-                        <div class="carousel-item">
-                            <img :src="item" alt="医院图片" />
+        <div class="w1200 view posr">
+            <!-- 医院介绍 -->
+            <div class="index-hospital-intr br12 bw mb20 pr20">
+                <h2 class="f28 lh36 pt25 pb5 mb3">
+                    <span class="hos-index-title pl20">医院介绍</span>
+                </h2>
+                <div class="clr pl20">
+                    <div class="fll left-txt">
+                        <div class="f16 lh28 wbwr hid4 taj fc6 mb10">
+                            {{ hospitalIntro }}
                         </div>
-                    </el-carousel-item>
-                </el-carousel>
+                        <div class="mb20">
+                            <a href="javascript:;" class="green f14 lh22 icon-right-0" @click="showFullIntro = true">查看更多</a>
+                        </div>
+                        <div class="pl20 pr20 pt10 pb10 br10 links fc6 lh34 f14">
+                            <div class="ellipsis">门诊时间：早上8：00—晚上17：30</div>
+                            <div class="ellipsis">导航地址：湖北省武汉市解放大道1277号</div>
+                            <div class="ellipsis">官网链接：http://hp.whut.edu.cn/yygk/yyjj/</div>
+                        </div>
+                    </div>
+                    <div class="flr right-banner posr ovh br10">
+                        <el-carousel :interval="4000" height="300px" indicator-position="outside">
+                            <el-carousel-item v-for="(item, index) in carouselImages" :key="index">
+                                <div class="banner-item">
+                                    <img :src="item" alt="医院图片" class="all-img img-cover">
+                                </div>
+                            </el-carousel-item>
+                        </el-carousel>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -67,8 +82,6 @@
 </template>
 
 <script>
-import jwtDecode from "jwt-decode";
-import { getToken } from "@/utils/storage.js";
 import request from "@/utils/request.js";
 
 export default {
@@ -76,169 +89,51 @@ export default {
     data() {
         return {
             showFullIntro: false,
-            hospitalIntro: "华中科技大学同济医学院附属协和医院创建于1866年,系卫生部直属大型综合性医院,内设华中科技大学同济医学院第一临床学院、亚洲紧急救援中心、湖北省急救中心,湖北省远程医学中心。医院先后被评为国家首批三级甲等医院、全国百佳医院、全国精神文明建设先进单位,获全国五一劳动奖状。",
-            fullHospitalIntro: "华中科技大学同济医学院附属协和医院创建于1866年,系卫生部直属大型综合性医院,内设华中科技大学同济医学院第一临床学院、亚洲紧急救援中心、湖北省急救中心,湖北省远程医学中心。医院先后被评为国家首批三级甲等医院、全国百佳医院、全国精神文明建设先进单位,获全国五一劳动奖状。医院拥有先进的医疗设备和技术力量,致力于为患者提供优质的医疗服务。医院秉承'患者至上,质量第一'的服务理念,不断推进医疗技术创新和人才培养,为人民群众的健康事业做出积极贡献。",
+            hospitalIntro: "武汉理工大学医院（以下简称医院）是经卫生行政部门批准开办的医院，隶属武汉理工大学，其马房山校区医院、余家头校区分院分别获批洪山区珞南街理工大社区卫生服务中心、武昌区杨园街理工大社区卫生服务中心，其南湖、三层楼校区分设医疗点。",
+            fullHospitalIntro: "武汉理工大学医院（以下简称医院）是经卫生行政部门批准开办的医院，隶属武汉理工大学，其马房山校区医院、余家头校区分院分别获批洪山区珞南街理工大社区卫生服务中心、武昌区杨园街理工大社区卫生服务中心，其南湖、三层楼校区分设医疗点。医院现有医护人员及职工168人，其中高级职称人员30人、中级职称人员86人；开设内科、外科、妇科、眼科、口腔科、耳鼻喉科、中医科、理疗科、皮肤科、精神科、肛肠科、检验科、放射科、超声室、心电图室、胃镜室、住院部、心理咨询、公共卫生科、计生办等科室；提供心血管、内分泌、肝病、消化、神经、肛肠、眼科、骨科、皮肤、心理咨询等专科服务，定期聘请上级医院专家坐诊；拥有自动生化分析仪、数字化摄影机（DR）、彩超机、12导联心电图仪、长程心电图仪、长程血压仪、电子胃镜、全自动电解质分析仪、全自动血球分析仪、血凝仪、CT等大型医疗设备。医院坚决贯彻国家卫生政策，充分发挥人员、设备、组织优势与特色，全心服务学校“立德树人”和“双一流”发展战略，围绕学校师生和社区居民的卫生与健康需求，积极提供常见病、多发病诊治以及院前急救等基本医疗服务，扎实开展预防、保健、康复、健康体检、健康管理与促进、突发公共卫生事件处理等基本公共卫生工作，贯彻落实计划生育、学校医疗费管理改革等基本工作职责，都进行了积极探索并取得优良成绩。医院以习近平新时代中国特色社会主义思想为指导，努力践行“以人为本、服务师生、保障健康、促进和谐”的办院理念，扎实开展医德医风与机关作风建设工作，积极组织服务形象设计比赛、“祖国好、理工美、医护亲”职工摄影展等特色文化活动，赢得学校教职工形象风采展示赛、“唱响新时代”歌咏赛等一、二等奖，荣获洪山区与武昌区计划生育工作红旗单位、全国基层卫生岗位练兵和技能竞赛优胜单位、社区医疗机构医疗质量管理先进单位、武汉理工大学先进党总支等荣誉，为把武汉理工大学建设成“让人民满意、让世人仰慕”的一流大学做出了积极贡献！",
             carouselImages: [
                 require("@/assets/homepage-back.jpg"),
                 require("@/assets/homepage-back.jpg"),
                 require("@/assets/homepage-back.jpg"),
-            ],
-            patientInfo: {
-                pName: "",
-                pPhone: "",
-                pCard: "",
-            },
+            ]
         };
     },
     methods: {
-        tokenDecode(token) {
-            if (token !== null) return jwtDecode(token);
-        },
         handleClose(done) {
             done();
-        },
-        requestPatientInfo() {
-            const userId = this.tokenDecode(getToken()).pId;
-            request
-                .get("doctor/findPatientById", {
-                    params: {
-                        pId: userId,
-                    },
-                })
-                .then((res) => {
-                    if (res.data.status !== 200)
-                        return this.$message.error("获取数据失败");
-                    this.patientInfo = res.data.data;
-                })
-                .catch((err) => {
-                    console.error(err);
-                });
-        },
+        }
     },
     created() {
-        const token = getToken();
-        if (token) {
-            const decoded = this.tokenDecode(token);
-            this.patientInfo.pName = decoded.pName || "";
-            this.patientInfo.pPhone = decoded.pPhone || "";
-            this.patientInfo.pCard = decoded.pCard || "";
-        }
-        this.requestPatientInfo();
+        // 页面初始化
     },
 };
 </script>
 
 <style scoped lang="scss">
 .hospital-intro-container {
-    padding: 30px;
-    max-width: 1400px;
-    margin: 0 auto;
+    background: #f5f7fa;
+    min-height: calc(100vh - 70px);
 }
 
-.main-card {
-    display: flex;
-    gap: 30px;
-    margin-bottom: 30px;
-    background: #fff;
-    border-radius: 8px;
-    padding: 30px;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+// 医院信息顶部
+.index-hospital-info-top {
+    background: linear-gradient(135deg, #409EFF 0%, #66b1ff 50%, #ecf5ff 100%);
+    padding: 40px 0 80px 0; // 增加顶部和底部padding，增加高度
+    margin-bottom: -40px; // 负边距，使底部与医院介绍模块重叠
     
-    .card-left {
-        flex: 2;
-        
-        h3 {
-            color: #333;
-            margin-bottom: 15px;
-            font-size: 20px;
+    .info {
+        .w1200 {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
         }
         
-        p {
-            color: #666;
-            line-height: 1.8;
-            font-size: 14px;
-        }
-    }
-    
-    .card-right {
-        flex: 1;
-        
-        .user-info-card {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        .hospital-logo {
+            width: 120px;
+            height: 120px;
             border-radius: 8px;
-            padding: 25px;
-            color: #fff;
-            
-            h4 {
-                margin: 0 0 20px 0;
-                font-size: 18px;
-                border-bottom: 1px solid rgba(255, 255, 255, 0.3);
-                padding-bottom: 10px;
-            }
-            
-            .info-item {
-                margin-bottom: 15px;
-                display: flex;
-                
-                .label {
-                    font-weight: 600;
-                    min-width: 80px;
-                }
-                
-                .value {
-                    flex: 1;
-                }
-            }
-        }
-    }
-}
-
-.intro-card {
-    display: flex;
-    gap: 30px;
-    background: #fff;
-    border-radius: 8px;
-    padding: 30px;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
-    margin-top: -20px; // 与主卡片重叠
-    
-    .intro-left {
-        flex: 1;
-        
-        h2 {
-            color: #333;
-            margin-bottom: 20px;
-            font-size: 24px;
-        }
-        
-        .intro-text {
-            color: #666;
-            line-height: 1.8;
-            font-size: 14px;
-            margin-bottom: 15px;
-            display: -webkit-box;
-            -webkit-line-clamp: 5;
-            -webkit-box-orient: vertical;
             overflow: hidden;
-        }
-        
-        .more-btn {
-            color: #409EFF;
-            font-size: 14px;
-            padding: 0;
-            
-            &:hover {
-                color: #66b1ff;
-            }
-        }
-    }
-    
-    .intro-right {
-        flex: 1;
-        
-        .carousel-item {
-            width: 100%;
-            height: 100%;
+            background: #fff;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -246,11 +141,605 @@ export default {
             img {
                 width: 100%;
                 height: 100%;
-                object-fit: cover;
+                object-fit: contain;
+            }
+        }
+        
+        .f28 {
+            font-size: 28px;
+            font-weight: bold;
+        }
+        
+        .fcf {
+            color: #fff;
+        }
+        
+        .flag {
+            .br4 {
                 border-radius: 4px;
+                background: rgba(255, 255, 255, 0.2);
+                color: #fff;
+                padding: 4px 10px;
+                margin-right: 10px;
+            }
+        }
+        
+        .link-tel {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            
+            .top-icon-email {
+                background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"><path fill="white" d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>') no-repeat left center;
+                padding-left: 32px;
             }
         }
     }
+}
+
+// 通用样式类
+.w1200 {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+.view {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    margin-top: -20px; // 往下移一点，与顶部重叠
+}
+
+.clr {
+    &::after {
+        content: '';
+        display: table;
+        clear: both;
+    }
+}
+
+.fll {
+    float: left;
+}
+
+.flr {
+    float: right;
+}
+
+.f28 {
+    font-size: 28px;
+}
+
+.f24 {
+    font-size: 24px;
+}
+
+.f18 {
+    font-size: 18px;
+}
+
+.f16 {
+    font-size: 16px;
+}
+
+.f14 {
+    font-size: 14px;
+}
+
+.lh36 {
+    line-height: 36px;
+}
+
+.lh30 {
+    line-height: 30px;
+}
+
+.lh28 {
+    line-height: 28px;
+}
+
+.lh26 {
+    line-height: 26px;
+}
+
+.lh24 {
+    line-height: 24px;
+}
+
+.lh22 {
+    line-height: 22px;
+}
+
+.lh38 {
+    line-height: 38px;
+}
+
+.lh34 {
+    line-height: 34px;
+}
+
+.lh56 {
+    line-height: 56px;
+}
+
+.lh40 {
+    line-height: 40px;
+}
+
+.lh60 {
+    line-height: 60px;
+}
+
+.pt30 {
+    padding-top: 30px;
+}
+
+.pt25 {
+    padding-top: 25px;
+}
+
+.pb30 {
+    padding-bottom: 30px;
+}
+
+.pb25 {
+    padding-bottom: 25px;
+}
+
+.pb20 {
+    padding-bottom: 20px;
+}
+
+.pb15 {
+    padding-bottom: 15px;
+}
+
+.pb10 {
+    padding-bottom: 10px;
+}
+
+.pb5 {
+    padding-bottom: 5px;
+}
+
+.pt10 {
+    padding-top: 10px;
+}
+
+.pt5 {
+    padding-top: 5px;
+}
+
+.pl20 {
+    padding-left: 20px;
+}
+
+.pr20 {
+    padding-right: 20px;
+}
+
+.mr20 {
+    margin-right: 20px;
+}
+
+.mr30 {
+    margin-right: 30px;
+}
+
+.mr40 {
+    margin-right: 40px;
+}
+
+.ml20 {
+    margin-left: 20px;
+}
+
+.ml15 {
+    margin-left: 15px;
+}
+
+.mr15 {
+    margin-right: 15px;
+}
+
+.mb30 {
+    margin-bottom: 30px;
+}
+
+.mb20 {
+    margin-bottom: 20px;
+}
+
+.mb15 {
+    margin-bottom: 15px;
+}
+
+.mb10 {
+    margin-bottom: 10px;
+}
+
+.mb5 {
+    margin-bottom: 5px;
+}
+
+.mb3 {
+    margin-bottom: 3px;
+}
+
+.mt15 {
+    margin-top: 15px;
+}
+
+.br12 {
+    border-radius: 12px;
+}
+
+.br10 {
+    border-radius: 10px;
+}
+
+.br8 {
+    border-radius: 8px;
+}
+
+.br6 {
+    border-radius: 6px;
+}
+
+.br4 {
+    border-radius: 4px;
+}
+
+.br-50 {
+    border-radius: 50%;
+}
+
+.bw {
+    background: #fff;
+}
+
+.posr {
+    position: relative;
+}
+
+.ovh {
+    overflow: hidden;
+}
+
+.db {
+    display: block;
+}
+
+.dib {
+    display: inline-block;
+}
+
+.tac {
+    text-align: center;
+}
+
+.taj {
+    text-align: justify;
+}
+
+.fc6 {
+    color: #666;
+}
+
+.fc9 {
+    color: #999;
+}
+
+.fc3 {
+    color: #333;
+}
+
+.fcf {
+    color: #fff;
+}
+
+.green {
+    color: #67c23a;
+}
+
+.yellow {
+    color: #ff9900;
+}
+
+.fn {
+    font-weight: normal;
+}
+
+.ellipsis {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.wbwr {
+    word-break: break-word;
+}
+
+.hid2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.hid4 {
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.bsbb {
+    box-sizing: border-box;
+}
+
+.all-img {
+    width: 100%;
+    height: 100%;
+}
+
+.img-cover {
+    object-fit: cover;
+}
+
+// 医院介绍
+.index-hospital-intr {
+    .left-txt {
+        width: calc(50% - 15px);
+        
+        .links {
+            background: #f5f7fa;
+            border-radius: 10px;
+        }
+    }
+    
+    .right-banner {
+        width: calc(50% - 15px);
+        height: 300px;
+        
+        .banner-item {
+            width: 100%;
+            height: 100%;
+            
+            img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+            }
+        }
+    }
+}
+
+// 医院环境
+.index-hospital-imgs {
+    .hos-img {
+        img {
+            width: calc(33.333% - 14px);
+            height: 200px;
+            margin-right: 20px;
+            margin-bottom: 20px;
+            
+            &:nth-child(3n) {
+                margin-right: 0;
+            }
+        }
+    }
+}
+
+// 科室导航
+.index-ks-map {
+    .list {
+        ul {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            
+            li {
+                width: calc(16.666% - 17px);
+                margin-right: 20px;
+                
+                &:nth-child(6n) {
+                    margin-right: 0;
+                }
+                
+                .a {
+                    background: #f5f7fa;
+                    transition: all 0.3s ease;
+                    
+                    &:hover {
+                        background: #409EFF;
+                        color: #fff;
+                    }
+                }
+            }
+        }
+    }
+}
+
+// 医生团队
+.index-doctors {
+    .top {
+        .cell {
+            width: calc(50% - 10px);
+            
+            .img {
+                width: 100%;
+                height: 200px;
+                margin-bottom: 15px;
+            }
+        }
+    }
+    
+    .bottom {
+        ul {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            
+            li {
+                width: calc(25% - 15px);
+                margin-right: 20px;
+                
+                &:nth-child(4n) {
+                    margin-right: 0;
+                }
+                
+                .cell {
+                    background: #fff;
+                    border: 1px solid #e4e7ed;
+                    padding: 15px;
+                    
+                    .img-name {
+                        .img {
+                            width: 80px;
+                            height: 80px;
+                            margin: 0 auto 10px;
+                        }
+                    }
+                    
+                    .bb1 {
+                        border-bottom: 1px solid #e4e7ed;
+                        padding-bottom: 15px;
+                    }
+                    
+                    .bt1 {
+                        border-top: 1px solid #e4e7ed;
+                    }
+                    
+                    .index-doctors-bottom-btns2 {
+                        a {
+                            color: #fff;
+                            text-decoration: none;
+                            
+                            &.icon-zx {
+                                background: #409EFF;
+                            }
+                            
+                            &.icon-yy {
+                                background: #67c23a;
+                            }
+                            
+                            &:hover {
+                                opacity: 0.8;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    .index-doctors-bottom-btns {
+        a {
+            padding: 8px 20px;
+            border-radius: 4px;
+            text-decoration: none;
+            color: #fff;
+            
+            &.a {
+                background: #409EFF;
+            }
+            
+            &.a-green {
+                background: #67c23a;
+            }
+            
+            &:hover {
+                opacity: 0.8;
+            }
+        }
+    }
+}
+
+// 诊疗评价
+.index-zlpj {
+    ul {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        
+        li {
+            width: calc(50% - 10px);
+            margin-right: 20px;
+            
+            &:nth-child(2n) {
+                margin-right: 0;
+            }
+            
+            .cell {
+                display: flex;
+                background: #fff;
+                border: 1px solid #e4e7ed;
+                border-radius: 8px;
+                padding: 20px;
+                
+                .img {
+                    width: 60px;
+                    height: 60px;
+                    margin-right: 15px;
+                    flex-shrink: 0;
+                }
+                
+                .info {
+                    flex: 1;
+                    
+                    .star {
+                        display: inline-block;
+                        width: 80px;
+                        height: 16px;
+                        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"><path fill="%23ffd700" d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>') repeat-x;
+                        background-size: 16px 16px;
+                        
+                        .span {
+                            height: 100%;
+                            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"><path fill="%23ffd700" d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>') repeat-x;
+                            background-size: 16px 16px;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+.hos-index-title {
+    font-weight: bold;
+    color: #333;
+}
+
+.icon-right-0::after {
+    content: '→';
+    margin-left: 5px;
+}
+
+.icon-right-more::after {
+    content: '→';
+    margin-left: 5px;
+}
+
+.a-hover:hover {
+    color: #409EFF;
+}
+
+.opc9 {
+    opacity: 0.9;
+}
+
+.pl10 {
+    padding-left: 10px;
+}
+
+.pr10 {
+    padding-right: 10px;
+}
+
+.pl32 {
+    padding-left: 32px;
 }
 
 .full-intro-content {

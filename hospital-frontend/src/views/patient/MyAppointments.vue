@@ -6,69 +6,141 @@
     <div class="my-appointments-container">
         <h2 class="page-title">我的预约</h2>
         
-        <el-card>
-            <el-table :data="orderData" size="small" stripe style="width: 100%" border>
-                <el-table-column prop="oId" label="挂号单号" width="100px"/>
-                <el-table-column prop="pName" label="姓名" width="100px"/>
-                <el-table-column prop="dName" label="医生姓名" width="100px"/>
-                <el-table-column prop="oStart" label="挂号时间" width="180px"/>
-                <el-table-column prop="oEnd" label="结束时间" width="180px"/>
-                <el-table-column prop="oTotalPrice" label="需交费用/元" width="120px"/>
-                <el-table-column prop="oPriceState" label="缴费状态" width="150px">
-                    <template slot-scope="scope">
-                        <el-tag
-                            type="success"
-                            v-if="scope.row.oPriceState === 1"
-                        >已缴费</el-tag>
-                        <el-button
-                            size="mini"
-                            type="warning"
-                            style="font-size: 14px"
-                            v-if="
-                                scope.row.oPriceState === 0 &&
-                                scope.row.oState === 1
-                            "
-                            @click="priceClick(scope.row.oId, scope.row.dId)"
-                        >
-                            <i class="iconfont icon-edit-button" style="font-size: 12px;"></i>点击缴费</el-button>
-                    </template>
-                </el-table-column>
-                <el-table-column prop="oState" label="挂号状态" width="120px">
-                    <template slot-scope="scope">
-                        <el-tag
-                            size="mini"
-                            type="primary"
-                            v-if="
-                                scope.row.oState === 1 &&
-                                scope.row.oPriceState === 1
-                            "
-                        >已完成</el-tag>
-                        <el-tag
-                            type="danger"
-                            v-if="
-                                scope.row.oState === 0 && scope.row.oState === 0
-                            "
-                        >未完成</el-tag>
-                    </template>
-                </el-table-column>
-                <el-table-column label="报告单" width="120px">
-                    <template slot-scope="scope">
-                        <el-button
-                            type="success"
-                            size="mini"
-                            style="font-size: 14px"
-                            @click="seeReport(scope.row.oId)"
-                            v-if="
-                                scope.row.oState === 1 &&
-                                scope.row.oPriceState === 1
-                            "
-                        >
-                            <i class="iconfont icon-export-button" style="font-size: 12px;"></i>导出
-                        </el-button>
-                    </template>
-                </el-table-column>
-            </el-table>
-        </el-card>
+        <!-- 加载状态 -->
+        <div v-if="loading" class="loading-container">
+            <i class="el-icon-loading" style="font-size: 32px; color: #409EFF;"></i>
+            <p>加载中...</p>
+        </div>
+
+        <!-- 空数据提示 -->
+        <el-empty v-if="!loading && orderData.length === 0" description="暂无预约记录"></el-empty>
+
+        <!-- 预约卡片列表 -->
+        <div v-if="!loading && orderData.length > 0" class="appointments-list">
+            <div 
+                v-for="order in orderData" 
+                :key="order.oId"
+                class="appointment-card br12 bw"
+            >
+                <div class="card-header">
+                    <div class="order-info">
+                        <div class="order-number">
+                            <i class="el-icon-document"></i>
+                            <span class="label">挂号单号：</span>
+                            <span class="value">{{ order.oId }}</span>
+                        </div>
+                        <div class="order-status">
+                            <el-tag
+                                size="small"
+                                type="success"
+                                v-if="order.oState === 1 && order.oPriceState === 1"
+                            >
+                                <i class="el-icon-check"></i> 已完成
+                            </el-tag>
+                            <el-tag
+                                size="small"
+                                type="warning"
+                                v-else-if="order.oState === 1 && order.oPriceState === 0"
+                            >
+                                <i class="el-icon-time"></i> 待缴费
+                            </el-tag>
+                            <el-tag
+                                size="small"
+                                type="info"
+                                v-else
+                            >
+                                <i class="el-icon-loading"></i> 进行中
+                            </el-tag>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    <div class="info-row">
+                        <div class="info-item">
+                            <i class="el-icon-user"></i>
+                            <span class="label">患者姓名：</span>
+                            <span class="value">{{ order.pName }}</span>
+                        </div>
+                        <div class="info-item">
+                            <i class="el-icon-user-solid"></i>
+                            <span class="label">医生姓名：</span>
+                            <span class="value">{{ order.dName }}</span>
+                        </div>
+                    </div>
+
+                    <div class="info-row">
+                        <div class="info-item">
+                            <i class="el-icon-time"></i>
+                            <span class="label">挂号时间：</span>
+                            <span class="value">{{ formatTime(order.oStart) }}</span>
+                        </div>
+                        <div class="info-item">
+                            <i class="el-icon-timer"></i>
+                            <span class="label">结束时间：</span>
+                            <span class="value">{{ formatTime(order.oEnd) }}</span>
+                        </div>
+                    </div>
+
+                    <div class="info-row">
+                        <div class="info-item price-item">
+                            <i class="el-icon-coin"></i>
+                            <span class="label">需交费用：</span>
+                            <span class="value price">¥{{ order.oTotalPrice || '0.00' }}</span>
+                        </div>
+                        <div class="info-item">
+                            <i class="el-icon-wallet"></i>
+                            <span class="label">缴费状态：</span>
+                            <el-tag
+                                type="success"
+                                size="small"
+                                v-if="order.oPriceState === 1"
+                            >
+                                <i class="el-icon-check"></i> 已缴费
+                            </el-tag>
+                            <el-tag
+                                type="warning"
+                                size="small"
+                                v-else
+                            >
+                                <i class="el-icon-warning"></i> 未缴费
+                            </el-tag>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-footer">
+                    <el-button
+                        type="warning"
+                        size="small"
+                        v-if="order.oPriceState === 0 && order.oState === 1"
+                        @click="priceClick(order.oId, order.dId)"
+                        class="action-btn"
+                    >
+                        <i class="el-icon-wallet"></i> 点击缴费
+                    </el-button>
+                    <el-button
+                        type="primary"
+                        size="small"
+                        @click="openReviewDialog(order.oId, order.dId)"
+                        v-if="order.oState === 1 && order.oPriceState === 1"
+                        :disabled="order.hasReviewed === true"
+                        :class="['action-btn', { 'disabled-btn': order.hasReviewed === true }]"
+                    >
+                        <i class="el-icon-edit"></i> {{ order.hasReviewed === true ? '已评价' : '我要评价' }}
+                    </el-button>
+                    <el-button
+                        type="success"
+                        size="small"
+                        @click="seeReport(order.oId)"
+                        v-if="order.oState === 1 && order.oPriceState === 1"
+                        class="action-btn"
+                    >
+                        <i class="el-icon-download"></i> 导出报告单
+                    </el-button>
+                </div>
+            </div>
+        </div>
         
         <!-- 评价对话框 -->
         <el-dialog title="用户评价" :visible.sync="starVisible" width="600px">
@@ -126,6 +198,7 @@ export default {
         return {
             userId: 1,
             orderData: [],
+            loading: false,
             star: 5,
             starVisible: false,
             dId: 1,
@@ -138,34 +211,51 @@ export default {
     methods: {
         //评价点击确认
         starClick() {
-            // 先更新医生评分
-            request
-                .get("doctor/updateStar", {
-                    params: {
-                        dId: this.dId,
-                        dStar: this.star,
-                    },
-                })
+            // 验证必要参数
+            if (!this.oId) {
+                this.$message.error("订单ID不能为空");
+                return;
+            }
+            if (!this.dId) {
+                this.$message.error("医生ID不能为空");
+                return;
+            }
+            if (!this.userId) {
+                this.$message.error("患者ID不能为空");
+                return;
+            }
+            
+            // 提交评价到review表
+            const reviewData = {
+                pId: this.userId,
+                dId: this.dId,
+                oId: this.oId,
+                rStar: Number(this.star),  // 确保是数字类型
+                rContent: this.reviewContent || "暂无评价内容",
+                rImpressions: this.impressions.join(",") || ""
+            };
+            
+            console.log("提交评价数据：", reviewData);
+            
+            request.post("review/add", reviewData)
                 .then((res) => {
+                    console.log("评价提交响应：", res);
                     if (res.data.status !== 200) {
-                        this.$message.error("评价失败");
+                        const errorMsg = res.data.msg || "评价提交失败";
+                        this.$message.error(errorMsg);
                         return;
                     }
-                    // 提交评价到review表
-                    const reviewData = {
-                        pId: this.userId,
-                        dId: this.dId,
-                        oId: this.oId,
-                        rStar: this.star,
-                        rContent: this.reviewContent || "暂无评价内容",
-                        rImpressions: this.impressions.join(",")
-                    };
-                    return request.post("review/add", reviewData);
+                    // 评价提交成功后，更新医生评分
+                    return request.get("doctor/updateStar", {
+                        params: {
+                            dId: this.dId,
+                            dStar: this.star,
+                        },
+                    });
                 })
                 .then((res) => {
                     if (res && res.data.status !== 200) {
-                        this.$message.error("评价提交失败");
-                        return;
+                        console.warn("更新医生评分失败，但评价已提交");
                     }
                     this.$message.success("谢谢您的评价");
                     this.starVisible = false;
@@ -173,10 +263,13 @@ export default {
                     this.reviewContent = "";
                     this.impressions = [];
                     this.star = 5;
+                    // 重新加载订单列表，更新评价状态
+                    this.requestOrder();
                 })
                 .catch((err) => {
-                    console.error(err);
-                    this.$message.error("评价提交失败，请稍后重试");
+                    console.error("评价提交错误：", err);
+                    const errorMsg = err.response?.data?.msg || err.message || "评价提交失败，请稍后重试";
+                    this.$message.error(errorMsg);
                 });
         },
         //查看报告单
@@ -217,6 +310,7 @@ export default {
         },
         //请求挂号信息
         requestOrder() {
+            this.loading = true;
             request
                 .get("patient/findOrderByPid", {
                     params: {
@@ -224,10 +318,100 @@ export default {
                     },
                 })
                 .then((res) => {
-                    if (res.data.status !== 200)
+                    if (res.data.status !== 200) {
                         this.$message.error("请求数据失败");
-                    this.orderData = res.data.data;
+                        return;
+                    }
+                    const orders = res.data.data || [];
+                    // 检查每个订单是否已评价
+                    this.checkReviewsForOrders(orders);
+                })
+                .catch((err) => {
+                    console.error(err);
+                    this.$message.error("获取预约信息失败，请稍后重试");
+                })
+                .finally(() => {
+                    this.loading = false;
                 });
+        },
+        // 检查订单是否已评价
+        checkReviewsForOrders(orders) {
+            // 先设置订单数据，默认未评价
+            this.orderData = orders.map(order => ({
+                ...order,
+                hasReviewed: false
+            }));
+            
+            // 获取所有已完成的订单ID
+            const completedOrderIds = orders
+                .filter(order => order.oState === 1 && order.oPriceState === 1)
+                .map(order => order.oId);
+            
+            if (completedOrderIds.length === 0) {
+                return;
+            }
+            
+            // 批量查询评价状态
+            const reviewPromises = completedOrderIds.map(oId => 
+                request.get("review/checkByOId", {
+                    params: { oId: oId }
+                }).then(res => ({
+                    oId: oId,
+                    hasReviewed: res.data && res.data.status === 200 && res.data.data === true
+                })).catch(() => ({
+                    oId: oId,
+                    hasReviewed: false
+                }))
+            );
+            
+            Promise.all(reviewPromises).then(reviewResults => {
+                // 创建评价状态映射
+                const reviewMap = {};
+                reviewResults.forEach(result => {
+                    reviewMap[result.oId] = result.hasReviewed;
+                });
+                
+                // 更新订单的评价状态
+                this.orderData = this.orderData.map(order => ({
+                    ...order,
+                    hasReviewed: reviewMap[order.oId] || false
+                }));
+            }).catch((err) => {
+                console.error("检查评价状态失败：", err);
+            });
+        },
+        // 打开评价对话框（从"我要评价"按钮触发）
+        openReviewDialog(oId, dId) {
+            request
+                .get("admin/findDoctor", {
+                    params: {
+                        dId: dId,
+                    },
+                })
+                .then((res) => {
+                    if (res.data.status !== 200) {
+                        return this.$message.error("请求数据失败");
+                    }
+                    this.dId = res.data.data.dId;
+                    this.dName = res.data.data.dName;
+                    this.oId = oId;  // 保存订单ID
+                    this.starVisible = true;  // 显示评价对话框
+                })
+                .catch((err) => {
+                    console.error(err);
+                    this.$message.error("获取医生信息失败");
+                });
+        },
+        //格式化时间
+        formatTime(time) {
+            if (!time) return "-";
+            const date = new Date(time);
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, "0");
+            const day = String(date.getDate()).padStart(2, "0");
+            const hour = String(date.getHours()).padStart(2, "0");
+            const minute = String(date.getMinutes()).padStart(2, "0");
+            return `${year}-${month}-${day} ${hour}:${minute}`;
         },
         //token解码
         tokenDecode(token) {
@@ -247,20 +431,195 @@ export default {
     padding: 30px;
     max-width: 1400px;
     margin: 0 auto;
-    background: #fff;
+    background: #f5f7fa;
     min-height: calc(100vh - 70px);
 }
 
 .page-title {
-    font-size: 24px;
+    font-size: 28px;
     font-weight: 600;
-    color: #333;
+    color: #303133;
     margin-bottom: 30px;
+    text-align: center;
 }
 
-.el-dialog div {
+.loading-container {
     text-align: center;
-    margin-bottom: 8px;
+    padding: 60px 20px;
+    
+    p {
+        margin-top: 15px;
+        color: #909399;
+        font-size: 14px;
+    }
+}
+
+.appointments-list {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.appointment-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 25px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+    
+    &:hover {
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+        transform: translateY(-2px);
+    }
+}
+
+.br12 {
+    border-radius: 12px;
+}
+
+.bw {
+    background: #fff;
+}
+
+.card-header {
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #f0f2f5;
+    
+    .order-info {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        
+        .order-number {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 16px;
+            
+            i {
+                color: #409EFF;
+                font-size: 20px;
+            }
+            
+            .label {
+                color: #909399;
+                font-weight: 500;
+            }
+            
+            .value {
+                color: #303133;
+                font-weight: 600;
+            }
+        }
+    }
+}
+
+.card-body {
+    margin-bottom: 20px;
+    
+    .info-row {
+        display: flex;
+        gap: 40px;
+        margin-bottom: 15px;
+        
+        &:last-child {
+            margin-bottom: 0;
+        }
+        
+        .info-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex: 1;
+            font-size: 14px;
+            
+            i {
+                color: #409EFF;
+                font-size: 16px;
+            }
+            
+            .label {
+                color: #909399;
+            }
+            
+            .value {
+                color: #303133;
+                font-weight: 500;
+            }
+            
+            &.price-item {
+                .value.price {
+                    color: #f56c6c;
+                    font-size: 18px;
+                    font-weight: 600;
+                }
+            }
+        }
+    }
+}
+
+.card-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding-top: 15px;
+    border-top: 1px solid #f0f2f5;
+    
+    .action-btn {
+        padding: 10px 20px;
+        font-size: 14px;
+        
+        i {
+            margin-right: 5px;
+        }
+        
+        &.disabled-btn {
+            background-color: #c0c4cc;
+            border-color: #c0c4cc;
+            color: #fff;
+            cursor: not-allowed;
+            
+            &:hover {
+                background-color: #c0c4cc;
+                border-color: #c0c4cc;
+                color: #fff;
+            }
+        }
+    }
+}
+
+// 评价对话框样式
+.el-dialog {
+    .dialog-footer {
+        text-align: right;
+    }
+}
+
+// 响应式设计
+@media (max-width: 768px) {
+    .my-appointments-container {
+        padding: 20px 15px;
+    }
+    
+    .appointment-card {
+        padding: 20px;
+    }
+    
+    .card-body {
+        .info-row {
+            flex-direction: column;
+            gap: 15px;
+        }
+    }
+    
+    .card-footer {
+        flex-direction: column;
+        
+        .action-btn {
+            width: 100%;
+        }
+    }
 }
 </style>
 
