@@ -38,10 +38,7 @@
                         </el-tag>
                         <el-tag
                             type="danger"
-                            v-if="
-                                scope.row.oPriceState === 0 &&
-                                scope.row.oState === 1
-                            "
+                            v-if="scope.row.oPriceState === 0"
                             >未缴费
                         </el-tag>
                     </template>
@@ -57,10 +54,16 @@
                             >已完成
                         </el-tag>
                         <el-tag
-                            type="danger"
+                            type="warning"
                             v-if="
-                                scope.row.oState === 0 && scope.row.oState === 0
+                                scope.row.oState === 1 &&
+                                scope.row.oPriceState === 0
                             "
+                            >已诊断未缴费
+                        </el-tag>
+                        <el-tag
+                            type="danger"
+                            v-if="scope.row.oState === 0"
                             >未完成
                         </el-tag>
                     </template>
@@ -148,10 +151,16 @@ export default {
                     },
                 })
                 .then((res) => {
-                    if (res.data.status !== 200)
+                    if (res.data.status !== 200) {
                         this.$message.error("请求数据失败");
-                    this.orderData = res.data.data.orders;
-                    this.total = res.data.data.total;
+                        return;
+                    }
+                    this.orderData = res.data.data?.orders || [];
+                    this.total = res.data.data?.total || 0;
+                })
+                .catch((err) => {
+                    console.error("获取挂号列表失败:", err);
+                    this.$message.error("获取挂号列表失败，请重试");
                 });
         },
         //token解码

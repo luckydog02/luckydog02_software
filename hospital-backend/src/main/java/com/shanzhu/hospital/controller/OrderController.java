@@ -163,7 +163,24 @@ public class OrderController {
         if (arId == null || arId.isEmpty()) {
             return R.error("排班ID不能为空");
         }
-        return R.ok(orderService.findOrderTime(arId));
+        try {
+            System.out.println("收到 findOrderTime 请求，arId: " + arId);
+            OrderArrangeVo result = orderService.findOrderTime(arId);
+            if (result == null) {
+                System.out.println("排班信息不存在，arId: " + arId);
+                return R.error("排班信息不存在，arId: " + arId);
+            }
+            System.out.println("查询成功，返回结果: " + result);
+            return R.ok(result);
+        } catch (RuntimeException e) {
+            System.err.println("RuntimeException: " + e.getMessage());
+            e.printStackTrace();
+            return R.error(e.getMessage());
+        } catch (Exception e) {
+            System.err.println("Exception: " + e.getMessage());
+            e.printStackTrace();
+            return R.error("查询排班信息失败: " + e.getMessage());
+        }
     }
 
     /**

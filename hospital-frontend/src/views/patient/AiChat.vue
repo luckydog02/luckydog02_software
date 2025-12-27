@@ -2,7 +2,6 @@
  * AI智能分诊助手页面
 -->
 <template>
-<<<<<<< HEAD
     <div class="ai-chat-container" :class="{ 'has-messages': messages.length > 0 }">
         <!-- 简洁的顶部标题（无消息时显示） -->
         <div v-if="messages.length === 0" class="welcome-header">
@@ -14,30 +13,16 @@
         
         <!-- 聊天消息区域 -->
         <div v-if="messages.length > 0" class="chat-body" ref="chatBody">
-=======
-    <div class="ai-chat-container">
-        <div class="chat-header">
-            <h2>智能分诊助手</h2>
-            <p class="subtitle">我可以帮您：找科室、查排班、问流程</p>
-        </div>
-        
-        <div class="chat-body" ref="chatBody">
->>>>>>> 1997eef59c8e36e2552ac2b8a50fbd3239644bdd
             <div 
                 v-for="(message, index) in messages" 
                 :key="index"
                 :class="['message', message.role]"
             >
                 <div class="message-avatar">
-<<<<<<< HEAD
                     <div class="avatar-wrapper">
                         <i v-if="message.role === 'user'" class="el-icon-user-solid"></i>
                         <i v-else class="el-icon-service"></i>
                     </div>
-=======
-                    <i v-if="message.role === 'user'" class="el-icon-user"></i>
-                    <i v-else class="el-icon-service"></i>
->>>>>>> 1997eef59c8e36e2552ac2b8a50fbd3239644bdd
                 </div>
                 <div class="message-content">
                     <div class="message-text" v-html="formatMessage(message.content)"></div>
@@ -60,7 +45,6 @@
             </div>
         </div>
         
-<<<<<<< HEAD
         <!-- 输入区域 -->
         <div class="chat-input-wrapper">
             <div class="chat-input" :class="{ 'has-messages': messages.length > 0 }">
@@ -100,27 +84,6 @@
                         </button>
                     </div>
                 </div>
-=======
-        <div class="chat-input">
-            <el-input
-                v-model="inputMessage"
-                type="textarea"
-                :rows="2"
-                placeholder="请输入您的问题，例如：我头疼应该挂什么科？"
-                @keyup.ctrl.enter="sendMessage"
-                :disabled="loading"
-            ></el-input>
-            <div class="input-actions">
-                <el-button 
-                    type="primary" 
-                    @click="sendMessage"
-                    :loading="loading"
-                    :disabled="!inputMessage.trim()"
-                >
-                    发送 (Ctrl+Enter)
-                </el-button>
-                <el-button @click="clearChat">清空对话</el-button>
->>>>>>> 1997eef59c8e36e2552ac2b8a50fbd3239644bdd
             </div>
         </div>
     </div>
@@ -320,7 +283,6 @@ export default {
             const hours = String(date.getHours()).padStart(2, "0");
             const minutes = String(date.getMinutes()).padStart(2, "0");
             return `${hours}:${minutes}`;
-<<<<<<< HEAD
         },
         
         handleEnterKey(event) {
@@ -329,8 +291,6 @@ export default {
                 return;
             }
             this.sendMessage();
-=======
->>>>>>> 1997eef59c8e36e2552ac2b8a50fbd3239644bdd
         }
     }
 };
@@ -341,7 +301,6 @@ export default {
     display: flex;
     flex-direction: column;
     height: calc(100vh - 70px);
-<<<<<<< HEAD
     max-width: 900px;
     margin: 0 auto;
     background: #fff;
@@ -384,35 +343,12 @@ export default {
         color: #303133;
         margin: 0;
         letter-spacing: 0.5px;
-=======
-    max-width: 1200px;
-    margin: 0 auto;
-    background: #f5f7fa;
-}
-
-.chat-header {
-    background: #fff;
-    padding: 20px 30px;
-    border-bottom: 1px solid #e4e7ed;
-    
-    h2 {
-        margin: 0 0 5px 0;
-        font-size: 24px;
-        color: #303133;
-    }
-    
-    .subtitle {
-        margin: 0;
-        font-size: 14px;
-        color: #909399;
->>>>>>> 1997eef59c8e36e2552ac2b8a50fbd3239644bdd
     }
 }
 
 .chat-body {
     flex: 1;
     overflow-y: auto;
-<<<<<<< HEAD
     padding: 30px 24px 20px;
     background: transparent;
     position: relative;
@@ -482,33 +418,11 @@ export default {
                 i {
                     font-size: 24px;
                 }
-=======
-    padding: 20px;
-    
-    .message {
-        display: flex;
-        margin-bottom: 20px;
-        animation: fadeIn 0.3s ease;
-        
-        .message-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-            margin-right: 12px;
-            
-            i {
-                font-size: 20px;
->>>>>>> 1997eef59c8e36e2552ac2b8a50fbd3239644bdd
             }
         }
         
         .message-content {
             flex: 1;
-<<<<<<< HEAD
             max-width: 75%;
             
             .message-text {
@@ -548,29 +462,14 @@ export default {
                     color: #606266;
                     font-style: italic;
                 }
-=======
-            max-width: 70%;
-            
-            .message-text {
-                background: #fff;
-                padding: 12px 16px;
-                border-radius: 8px;
-                line-height: 1.6;
-                word-wrap: break-word;
-                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
->>>>>>> 1997eef59c8e36e2552ac2b8a50fbd3239644bdd
             }
             
             .message-time {
                 font-size: 12px;
                 color: #909399;
-<<<<<<< HEAD
                 margin-top: 8px;
                 padding: 0 6px;
                 font-weight: 400;
-=======
-                margin-top: 5px;
->>>>>>> 1997eef59c8e36e2552ac2b8a50fbd3239644bdd
             }
         }
         
@@ -579,25 +478,18 @@ export default {
             
             .message-avatar {
                 margin-right: 0;
-<<<<<<< HEAD
                 margin-left: 14px;
                 
                 .avatar-wrapper {
                     background: linear-gradient(135deg, #409EFF 0%, #66b1ff 100%);
                     color: #fff;
                 }
-=======
-                margin-left: 12px;
-                background: #409EFF;
-                color: #fff;
->>>>>>> 1997eef59c8e36e2552ac2b8a50fbd3239644bdd
             }
             
             .message-content {
                 text-align: right;
                 
                 .message-text {
-<<<<<<< HEAD
                     background: linear-gradient(135deg, #409EFF 0%, #66b1ff 100%);
                     color: #fff;
                     border: none;
@@ -620,17 +512,12 @@ export default {
                 .message-time {
                     text-align: right;
                     color: rgba(255, 255, 255, 0.7);
-=======
-                    background: #409EFF;
-                    color: #fff;
->>>>>>> 1997eef59c8e36e2552ac2b8a50fbd3239644bdd
                 }
             }
         }
         
         &.assistant {
             .message-avatar {
-<<<<<<< HEAD
                 .avatar-wrapper {
                     background: linear-gradient(135deg, #67C23A 0%, #85CE61 100%);
                     color: #fff;
@@ -639,16 +526,11 @@ export default {
             
             .message-content .message-text {
                 border-left: 3px solid #67C23A;
-=======
-                background: #67C23A;
-                color: #fff;
->>>>>>> 1997eef59c8e36e2552ac2b8a50fbd3239644bdd
             }
         }
         
         .typing {
             display: flex;
-<<<<<<< HEAD
             align-items: center;
             gap: 8px;
             padding: 16px 20px;
@@ -662,16 +544,6 @@ export default {
                 height: 10px;
                 border-radius: 50%;
                 background: linear-gradient(135deg, #67C23A 0%, #85CE61 100%);
-=======
-            gap: 4px;
-            padding: 12px 16px;
-            
-            span {
-                width: 8px;
-                height: 8px;
-                border-radius: 50%;
-                background: #909399;
->>>>>>> 1997eef59c8e36e2552ac2b8a50fbd3239644bdd
                 animation: typing 1.4s infinite;
                 
                 &:nth-child(2) {
@@ -686,7 +558,6 @@ export default {
     }
 }
 
-<<<<<<< HEAD
 // 输入区域容器
 .chat-input-wrapper {
     padding: 20px;
@@ -818,25 +689,6 @@ export default {
     from {
         opacity: 0;
         transform: translateY(20px);
-=======
-.chat-input {
-    background: #fff;
-    padding: 20px;
-    border-top: 1px solid #e4e7ed;
-    
-    .input-actions {
-        display: flex;
-        justify-content: flex-end;
-        gap: 10px;
-        margin-top: 10px;
-    }
-}
-
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(10px);
->>>>>>> 1997eef59c8e36e2552ac2b8a50fbd3239644bdd
     }
     to {
         opacity: 1;
@@ -847,7 +699,6 @@ export default {
 @keyframes typing {
     0%, 60%, 100% {
         transform: translateY(0);
-<<<<<<< HEAD
         opacity: 0.6;
     }
     30% {
@@ -905,14 +756,3 @@ export default {
     }
 }
 </style>
-=======
-        opacity: 0.7;
-    }
-    30% {
-        transform: translateY(-10px);
-        opacity: 1;
-    }
-}
-</style>
-
->>>>>>> 1997eef59c8e36e2552ac2b8a50fbd3239644bdd

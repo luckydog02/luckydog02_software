@@ -23,4 +23,12 @@ public interface ArrangeMapper extends BaseMapper<Arrange> {
      */
     List<Arrange> findByTime(@Param("ar_time") String arTime, @Param("d_section") String dSection);
 
+    /**
+     * 根据排班ID查询（自定义查询，避免 selectById 对 String 类型主键的问题）
+     *
+     * @param arId 排班ID
+     * @return 排班信息
+     */
+    Arrange selectByArId(@Param("arId") String arId);
+
 }

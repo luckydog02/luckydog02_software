@@ -127,4 +127,20 @@
         ORDER BY o.o_start DESC
     </select>
 
+    <select id="countOrdersByTimeSlot" resultType="Integer">
+        SELECT COUNT(*) 
+        FROM orders 
+        WHERE d_id = #{dId} 
+        AND o_start LIKE CONCAT(#{date}, ' ', #{timeSlot}, '%')
+        AND (o_state = 0 OR o_state IS NULL)
+        AND o_start IS NOT NULL
+    </select>
+
+    <select id="countPatientOrdersByDate" resultType="Integer">
+        SELECT COUNT(*) 
+        FROM orders 
+        WHERE p_id = #{pId} 
+        AND o_start LIKE CONCAT(#{date}, '%')
+    </select>
+
 </mapper>

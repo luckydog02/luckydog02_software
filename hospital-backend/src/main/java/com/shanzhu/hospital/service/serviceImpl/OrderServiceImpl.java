@@ -13,6 +13,7 @@ import com.shanzhu.hospital.entity.po.Arrange;
 import com.shanzhu.hospital.entity.po.Orders;
 import com.shanzhu.hospital.entity.vo.OrderArrangeVo;
 import com.shanzhu.hospital.entity.vo.OrdersPageVo;
+import com.shanzhu.hospital.entity.vo.TimeSlotVo;
 import com.shanzhu.hospital.mapper.ArrangeMapper;
 import com.shanzhu.hospital.mapper.OrderMapper;
 import com.shanzhu.hospital.service.OrderService;
@@ -25,6 +26,7 @@ import java.sql.Connection;
 import java.sql.Types;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -88,7 +90,39 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Orders> implement
      */
     @Override
     public Boolean addOrder(Orders order, String arId) {
-        String oStart = order.getOStart().substring(0, 22);
+        // 处理oStart格式，确保格式正确
+        String oStart = order.getOStart();
+        if (oStart.length() > 22) {
+            oStart = oStart.substring(0, 22);
+        }
+        
+        // 提取日期（格式：yyyy-MM-dd）
+        String date = oStart.substring(0, 10);
+        
+        // 提取时间段（格式：08:30-09:30）
+        String timeSlot = "";
+        if (oStart.length() > 11) {
+            timeSlot = oStart.substring(11);
+        }
+        
+        // 检查患者当天是否已有预约（一天只能预约一次）
+        if (hasPatientOrderToday(order.getPId(), date)) {
+            throw new RuntimeException("您今天已有预约，一天只能预约一次");
+        }
+        
+        // 如果是当天预约，检查是否只能预约当前时间之后的时间段
+        if (isToday(date)) {
+            if (!canBookTimeSlot(timeSlot)) {
+                throw new RuntimeException("当天只能预约当前时间之后的时间段");
+            }
+        }
+        
+        // 检查该时间段是否还有剩余号数
+        Integer remainingCount = getRemainingCountForTimeSlot(order.getDId(), date, timeSlot);
+        if (remainingCount == null || remainingCount <= 0) {
+            throw new RuntimeException("该时间段号数已满，请选择其他时间段");
+        }
+        
         //查询患者当前时间段是否有未诊断的挂号单
         List<Orders> existOrders = lambdaQuery()
                 //患者id
@@ -101,7 +135,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Orders> implement
 
         //存在未诊断的挂号单
         if(CollUtil.isNotEmpty(existOrders)){
-            return Boolean.FALSE;
+            throw new RuntimeException("您在该时间段已有预约");
         }
 
         //挂号单信息
@@ -330,17 +364,159 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Orders> implement
      */
     @Override
     public OrderArrangeVo findOrderTime(String arId) {
-        //查询排班信息
-        Arrange arrange = arrangeMapper.selectById(arId);
+        //查询排班信息 - 使用自定义查询方法，避免 selectById 对 String 类型主键的问题
+        Arrange arrange = null;
+        try {
+            System.out.println("Service 层开始查询，arId: " + arId + ", 类型: " + (arId != null ? arId.getClass().getName() : "null"));
+            // 先尝试使用自定义查询
+            arrange = arrangeMapper.selectByArId(arId);
+            System.out.println("自定义查询结果: " + (arrange != null ? arrange.toString() : "null"));
+            // 如果自定义查询返回 null，再尝试 selectById
+            if (arrange == null) {
+                System.out.println("自定义查询返回 null，尝试使用 selectById");
+                arrange = arrangeMapper.selectById(arId);
+                System.out.println("selectById 查询结果: " + (arrange != null ? arrange.toString() : "null"));
+            }
+        } catch (Exception e) {
+            // 记录异常但不抛出，返回 null 让 Controller 处理
+            System.err.println("查询排班信息异常，arId: " + arId + ", 错误: " + e.getMessage());
+            e.printStackTrace();
+            // 确保返回 null，不抛出异常
+            return null;
+        }
         
         if (arrange == null) {
-            throw new RuntimeException("排班信息不存在，arId: " + arId);
+            // 返回 null 而不是抛出异常，让 Controller 层处理
+            System.out.println("未找到排班信息，arId: " + arId);
+            return null;
         }
 
         OrderArrangeVo orderArrangeVo = new OrderArrangeVo();
         orderArrangeVo.setOrderDate(arrange.getArTime());
+        
+        // 计算每个时间段的剩余号数
+        List<TimeSlotVo> timeSlots = calculateTimeSlots(arrange.getDId(), arrange.getArTime());
+        orderArrangeVo.setTimeSlots(timeSlots);
+        
+        System.out.println("查询成功，返回 OrderArrangeVo: " + orderArrangeVo);
+        System.out.println("时间段列表大小: " + (timeSlots != null ? timeSlots.size() : 0));
+        if (timeSlots != null) {
+            for (TimeSlotVo slot : timeSlots) {
+                System.out.println("时间段: " + slot.getTimeSlot() + ", 剩余号数: " + slot.getRemainingCount());
+            }
+        }
 
         return orderArrangeVo;
+    }
+    
+    /**
+     * 计算每个时间段的剩余号数
+     * 
+     * @param dId 医生ID
+     * @param date 日期（格式：yyyy-MM-dd）
+     * @return 时间段列表
+     */
+    private List<TimeSlotVo> calculateTimeSlots(Integer dId, String date) {
+        List<TimeSlotVo> timeSlots = new ArrayList<>();
+        int totalCount = 10; // 每个时间段总号数
+        
+        // 定义所有时间段
+        String[] timeSlotArray = {
+            "08:30-09:30",
+            "09:30-10:30",
+            "10:30-11:30",
+            "14:30-15:30",
+            "15:30-16:30",
+            "16:30-17:30"
+        };
+        
+        for (String timeSlot : timeSlotArray) {
+            TimeSlotVo vo = new TimeSlotVo();
+            vo.setTimeSlot(timeSlot);
+            vo.setTotalCount(totalCount);
+            
+            // 查询该时间段的预约数量
+            Integer bookedCount = orderMapper.countOrdersByTimeSlot(dId, date, timeSlot);
+            if (bookedCount == null) {
+                bookedCount = 0;
+            }
+            
+            System.out.println("时间段: " + timeSlot + ", 日期: " + date + ", 医生ID: " + dId + ", 已预约数: " + bookedCount);
+            
+            // 计算剩余号数
+            int remainingCount = totalCount - bookedCount;
+            vo.setRemainingCount(Math.max(0, remainingCount)); // 确保不为负数
+            
+            System.out.println("时间段: " + timeSlot + ", 剩余号数: " + vo.getRemainingCount());
+            
+            timeSlots.add(vo);
+        }
+        
+        return timeSlots;
+    }
+    
+    /**
+     * 检查患者某天是否已有预约
+     * 
+     * @param pId 患者ID
+     * @param date 日期（格式：yyyy-MM-dd）
+     * @return true表示已有预约，false表示没有预约
+     */
+    public boolean hasPatientOrderToday(Integer pId, String date) {
+        Integer count = orderMapper.countPatientOrdersByDate(pId, date);
+        return count != null && count > 0;
+    }
+    
+    /**
+     * 判断指定日期是否是今天
+     * 
+     * @param date 日期（格式：yyyy-MM-dd）
+     * @return true表示是今天，false表示不是今天
+     */
+    private boolean isToday(String date) {
+        String today = DateUtil.formatDate(DateUtil.date());
+        return today.equals(date);
+    }
+    
+    /**
+     * 判断是否可以预约该时间段（当天只能预约当前时间之后的时间段）
+     * 
+     * @param timeSlot 时间段（格式：08:30-09:30）
+     * @return true表示可以预约，false表示不能预约
+     */
+    private boolean canBookTimeSlot(String timeSlot) {
+        if (timeSlot == null || timeSlot.isEmpty()) {
+            return false;
+        }
+        
+        // 提取时间段的开始时间（如：08:30）
+        String startTime = timeSlot.split("-")[0];
+        if (startTime == null || startTime.isEmpty()) {
+            return false;
+        }
+        
+        // 获取当前时间（格式：HH:mm）
+        String currentTime = DateUtil.format(DateUtil.date(), "HH:mm");
+        
+        // 比较时间（格式：HH:mm）
+        return startTime.compareTo(currentTime) > 0;
+    }
+    
+    /**
+     * 获取某个时间段的剩余号数
+     * 
+     * @param dId 医生ID
+     * @param date 日期（格式：yyyy-MM-dd）
+     * @param timeSlot 时间段（格式：08:30-09:30）
+     * @return 剩余号数
+     */
+    private Integer getRemainingCountForTimeSlot(Integer dId, String date, String timeSlot) {
+        int totalCount = 10; // 每个时间段总号数
+        Integer bookedCount = orderMapper.countOrdersByTimeSlot(dId, date, timeSlot);
+        if (bookedCount == null) {
+            bookedCount = 0;
+        }
+        return totalCount - bookedCount;
     }
 
     /**

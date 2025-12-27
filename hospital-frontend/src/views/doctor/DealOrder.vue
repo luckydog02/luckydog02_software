@@ -347,9 +347,16 @@ export default {
           },
         })
         .then((res) => {
-          if (res.data.status != 200) this.$message.error("获取信息失败");
-          this.checkData = res.data.data.checks;
-          this.checkTotal = res.data.data.total;
+          if (res.data.status != 200) {
+            this.$message.error("获取信息失败");
+            return;
+          }
+          this.checkData = res.data.data?.checks || [];
+          this.checkTotal = res.data.data?.total || 0;
+        })
+        .catch((err) => {
+          console.error("获取检查项目失败:", err);
+          this.$message.error("获取检查项目失败，请重试");
         });
     },
     /**
@@ -442,9 +449,16 @@ export default {
           },
         })
         .then((res) => {
-          if (res.data.status != 200) this.$message.error("获取信息失败");
-          this.drugData = res.data.data.drugs;
-          this.total = res.data.data.total;
+          if (res.data.status != 200) {
+            this.$message.error("获取信息失败");
+            return;
+          }
+          this.drugData = res.data.data?.drugs || [];
+          this.total = res.data.data?.total || 0;
+        })
+        .catch((err) => {
+          console.error("获取药物列表失败:", err);
+          this.$message.error("获取药物列表失败，请重试");
         });
     },
     //获取患者信息
@@ -456,10 +470,18 @@ export default {
           },
         })
         .then((res) => {
-          if (res.data.status != 200) this.$message.error("获取信息失败");
-          this.pName = res.data.data.pName;
-          this.pGender = res.data.data.pGender;
-          this.pPhone = res.data.data.pPhone;
+          if (res.data.status != 200) {
+            this.$message.error("获取信息失败");
+            return;
+          }
+          const patient = res.data.data || {};
+          this.pName = patient.pName || "";
+          this.pGender = patient.pGender || "";
+          this.pPhone = patient.pPhone || "";
+        })
+        .catch((err) => {
+          console.error("获取患者信息失败:", err);
+          this.$message.error("获取患者信息失败，请重试");
         });
     },
     //token解码

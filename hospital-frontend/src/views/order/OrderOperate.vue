@@ -131,9 +131,9 @@
         >
           <el-option
               v-for="time in times"
-              :key="time"
-              :label="time"
-              :value="time"
+              :key="time.value"
+              :label="time.label"
+              :value="time.value"
           >
           </el-option>
         </el-select>
@@ -227,7 +227,10 @@ export default {
       monthDays: [],
       clickTag: false,
       orderFormVisible: false,
-      orderForm: { orderDate: "" },
+      orderForm: { 
+        orderDate: "",
+        oTime: ""
+      },
       times: [],
       orderRules: {
         oTime: [
@@ -286,34 +289,40 @@ export default {
                 date.getDate() === today.getDate();
             var array = [];
             if (!this.isTimeAfterTarget("09:30") || !isToday) {
-              array.push(
-                  "08:30-09:30  " + "   余号 " + "1"
-              );
+              array.push({
+                label: "08:30-09:30     余号 1",
+                value: "08:30-09:30"
+              });
             }
             if (!this.isTimeAfterTarget("10:30") || !isToday) {
-              array.push(
-                  "09:30-10:30  " + "   余号 " + "1"
-              );
+              array.push({
+                label: "09:30-10:30     余号 1",
+                value: "09:30-10:30"
+              });
             }
             if (!this.isTimeAfterTarget("11:30") || !isToday) {
-              array.push(
-                  "10:30-11:30  " + "   余号 " + "1"
-              );
+              array.push({
+                label: "10:30-11:30     余号 1",
+                value: "10:30-11:30"
+              });
             }
             if (!this.isTimeAfterTarget("15:30") || !isToday) {
-              array.push(
-                  "14:30-15:30  " + "   余号 " + "1"
-              );
+              array.push({
+                label: "14:30-15:30     余号 1",
+                value: "14:30-15:30"
+              });
             }
             if (!this.isTimeAfterTarget("16:30") || !isToday) {
-              array.push(
-                  "15:30-16:30  " + "   余号 " + "1"
-              );
+              array.push({
+                label: "15:30-16:30     余号 1",
+                value: "15:30-16:30"
+              });
             }
             if (!this.isTimeAfterTarget("17:30") || !isToday) {
-              array.push(
-                  "16:30-17:30  " + "   余号 " + "1"
-              );
+              array.push({
+                label: "16:30-17:30     余号 1",
+                value: "16:30-17:30"
+              });
             }
             this.times = array;
           });

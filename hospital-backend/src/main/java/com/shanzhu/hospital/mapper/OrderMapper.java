@@ -77,4 +77,23 @@ public interface OrderMapper extends BaseMapper<Orders> {
      */
     List<Orders> findOrderByPid(Integer pId);
 
+    /**
+     * 统计某个医生某个日期某个时间段的预约数量
+     *
+     * @param dId 医生ID
+     * @param date 日期（格式：yyyy-MM-dd）
+     * @param timeSlot 时间段（格式：08:30-09:30）
+     * @return 预约数量
+     */
+    Integer countOrdersByTimeSlot(@Param("dId") Integer dId, @Param("date") String date, @Param("timeSlot") String timeSlot);
+
+    /**
+     * 检查患者某天是否已有预约
+     *
+     * @param pId 患者ID
+     * @param date 日期（格式：yyyy-MM-dd）
+     * @return 预约数量
+     */
+    Integer countPatientOrdersByDate(@Param("pId") Integer pId, @Param("date") String date);
+
 }

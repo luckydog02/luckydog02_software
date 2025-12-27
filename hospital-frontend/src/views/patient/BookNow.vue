@@ -137,8 +137,9 @@
                                 size="small"
                                 type="primary"
                                 icon="el-icon-check"
-                                @click="openClick(scope.row.dId, scope.row.dName)"
+                                @click="handleBookClick(scope.row)"
                                 class="book-btn"
+                                :disabled="!scope.row.arId"
                             >
                                 挂号
                             </el-button>
@@ -194,9 +195,9 @@
                     >
                         <el-option
                             v-for="time in times"
-                            :key="time"
-                            :label="time"
-                            :value="time"
+                            :key="time.value"
+                            :label="time.label"
+                            :value="time.value"
                         >
                         </el-option>
                     </el-select>
@@ -301,7 +302,10 @@ export default {
             sectionData: [],
             clickTag: false,
             orderFormVisible: false,
-            orderForm: { orderDate: "" },
+            orderForm: { 
+                orderDate: "",
+                oTime: ""
+            },
             times: [],
             orderRules: {
                 oTime: [
@@ -337,9 +341,12 @@ export default {
                 })
                 .then((res) => {
                     if (res.data.status === 200 && res.data.data) {
-                        // 从后端获取医生数据，确保包含所有字段
+                        // 从后端获取医生数据，确保包含所有字段和排班ID
                         this.sectionData = res.data.data.map((item) => {
                             const doctor = item.doctor || {};
+                            // 确保 arId 存在，如果不存在则使用 item 的 arId 或 item.arId
+                            const arId = item.arId || item.ar_id || null;
+                            console.log("排班数据项:", item, "arId:", arId);
                             return {
                                 dId: doctor.dId,
                                 dName: doctor.dName,
@@ -348,7 +355,8 @@ export default {
                                 dSection: doctor.dSection || '',
                                 dIntroduction: doctor.dIntroduction || '',
                                 dPrice: doctor.dPrice || 0,
-                                dAvgStar: doctor.dAvgStar || 0
+                                dAvgStar: doctor.dAvgStar || 0,
+                                arId: arId // 保存排班ID
                             };
                         });
                         this.clickTag = true;
@@ -362,41 +370,151 @@ export default {
                     this.$message.error("获取医生列表失败");
                 });
         },
-        requestTime(id) {
-            this.idTime = id + this.orderDate;
+        requestTime(arId) {
+            // 修复：直接使用排班ID，而不是拼接
+            console.log("requestTime 调用，arId:", arId, "类型:", typeof arId);
+            if (!arId) {
+                this.$message.warning("排班信息不存在");
+                this.times = [];
+                return;
+            }
+            // 确保 arId 是字符串类型
+            const arIdStr = String(arId).trim();
+            if (!arIdStr) {
+                this.$message.warning("排班ID无效");
+                this.times = [];
+                return;
+            }
+            // 获取日期用于时间段判断
+            const dateToUse = this.orderDate || this.orderForm.orderDate || this.selectedDate;
+            if (!dateToUse) {
+                this.$message.warning("请先选择预约日期");
+                this.times = [];
+                return;
+            }
+            this.idTime = arIdStr;
+            console.log("========== 开始请求时间段 ==========");
+            console.log("发送请求，arId:", arIdStr);
+            console.log("请求URL: order/findOrderTime");
+            console.log("请求参数:", { arId: arIdStr });
             request
                 .get("order/findOrderTime", {
                     params: {
-                        arId: this.idTime,
+                        arId: arIdStr, // 直接使用排班ID，确保是字符串
                     },
                 })
                 .then((res) => {
-                    const date = new Date(this.orderDate);
+                    console.log("========== 收到响应 ==========");
+                    console.log("响应状态码:", res.status);
+                    console.log("响应数据:", res.data);
+                    console.log("findOrderTime 完整响应:", JSON.stringify(res.data, null, 2));
+                    if (res.data && res.data.status === 200 && res.data.data) {
+                        const orderData = res.data.data;
+                        console.log("orderData:", orderData);
+                        console.log("timeSlots:", orderData.timeSlots);
+                        const dateStr = dateToUse; // 格式: yyyy-MM-dd
+                        const [year, month, day] = dateStr.split('-');
+                        const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+                        const today = new Date();
+                        today.setHours(0, 0, 0, 0);
+                        const selectedDateOnly = new Date(date);
+                        selectedDateOnly.setHours(0, 0, 0, 0);
+                        const isToday = selectedDateOnly.getTime() === today.getTime();
+                        
+                        // 使用后端返回的时间段数据
+                        let array = [];
+                        if (orderData.timeSlots && Array.isArray(orderData.timeSlots) && orderData.timeSlots.length > 0) {
+                            console.log("处理时间段数据，共", orderData.timeSlots.length, "个时间段");
+                            orderData.timeSlots.forEach((slot, index) => {
+                                console.log(`时间段 ${index + 1}:`, slot);
+                                const timeSlot = slot.timeSlot; // 如：08:30-09:30
+                                const remainingCount = slot.remainingCount !== undefined ? slot.remainingCount : 0;
+                                
+                                console.log(`时间段: ${timeSlot}, 剩余号数: ${remainingCount}, 是否今天: ${isToday}`);
+                                
+                                // 提取时间段的开始时间（如：08:30）
+                                const startTime = timeSlot.split('-')[0];
+                                
+                                // 如果是今天，只显示当前时间之后的时间段
+                                if (isToday) {
+                                    const isTimePassed = this.isTimeAfterTarget(startTime);
+                                    console.log(`时间段 ${timeSlot} 开始时间 ${startTime} 是否已过: ${isTimePassed}`);
+                                    // 检查当前时间是否已超过该时间段的开始时间
+                                    if (!isTimePassed) {
+                                        // 当前时间未超过该时间段，可以显示
+                                        if (remainingCount > 0) {
+                                            array.push({
+                                                label: `${timeSlot}    余号 ${remainingCount}`,
+                                                value: timeSlot
+                                            });
+                                            console.log(`添加时间段: ${timeSlot}, 剩余号数: ${remainingCount}`);
+                                        } else {
+                                            console.log(`跳过时间段: ${timeSlot}, 剩余号数为0`);
+                                        }
+                                    } else {
+                                        console.log(`跳过时间段: ${timeSlot}, 时间已过`);
+                                    }
+                                    // 如果当前时间已超过，不显示该时间段
+                                } else {
+                                    // 不是今天，显示所有有剩余号数的时间段
+                                    if (remainingCount > 0) {
+                                        array.push({
+                                            label: `${timeSlot}    余号 ${remainingCount}`,
+                                            value: timeSlot
+                                        });
+                                        console.log(`添加时间段: ${timeSlot}, 剩余号数: ${remainingCount}`);
+                                    } else {
+                                        console.log(`跳过时间段: ${timeSlot}, 剩余号数为0`);
+                                    }
+                                }
+                            });
+                        } else {
+                            // 如果后端没有返回时间段数据，提示错误
+                            console.error("后端未返回时间段数据");
+                            this.$message.error("获取时间段数据失败，请刷新重试");
+                            this.times = [];
+                        }
+                        this.times = array;
+                        console.log("时间段数组:", array, "是否今天:", isToday, "选择日期:", dateToUse);
+                    } else {
+                        console.error("findOrderTime 返回错误:", res.data);
+                        // 即使后端返回错误，也尝试显示时间段（降级处理）
+                        const msg = res.data?.msg || "获取时间段失败";
+                        console.warn(msg + "，将使用默认时间段");
+                        // 继续执行时间段生成逻辑
+                        const dateStr = dateToUse;
+                        const [year, month, day] = dateStr.split('-');
+                        const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+                        const today = new Date();
+                        today.setHours(0, 0, 0, 0);
+                        const selectedDateOnly = new Date(date);
+                        selectedDateOnly.setHours(0, 0, 0, 0);
+                        const isToday = selectedDateOnly.getTime() === today.getTime();
+                        
+                        // 错误处理：不显示降级时间段，提示用户
+                        this.times = [];
+                        this.$message.error("获取时间段数据失败，请刷新重试");
+                    }
+                })
+                .catch((err) => {
+                    console.error("========== 请求失败 ==========");
+                    console.error("错误对象:", err);
+                    console.error("错误信息:", err.message);
+                    console.error("错误响应:", err.response);
+                    console.error("请求参数 arId:", arId);
+                    // 即使请求失败，也尝试显示时间段（可能是网络问题）
+                    const dateStr = dateToUse;
+                    const [year, month, day] = dateStr.split('-');
+                    const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
                     const today = new Date();
-                    const isToday =
-                        date.getFullYear() === today.getFullYear() &&
-                        date.getMonth() === today.getMonth() &&
-                        date.getDate() === today.getDate();
-                    let array = [];
-                    if (!this.isTimeAfterTarget("09:30") || !isToday) {
-                        array.push("08:30-09:30  " + "   余号 " + "1");
-                    }
-                    if (!this.isTimeAfterTarget("10:30") || !isToday) {
-                        array.push("09:30-10:30  " + "   余号 " + "1");
-                    }
-                    if (!this.isTimeAfterTarget("11:30") || !isToday) {
-                        array.push("10:30-11:30  " + "   余号 " + "1");
-                    }
-                    if (!this.isTimeAfterTarget("15:30") || !isToday) {
-                        array.push("14:30-15:30  " + "   余号 " + "1");
-                    }
-                    if (!this.isTimeAfterTarget("16:30") || !isToday) {
-                        array.push("15:30-16:30  " + "   余号 " + "1");
-                    }
-                    if (!this.isTimeAfterTarget("17:30") || !isToday) {
-                        array.push("16:30-17:30  " + "   余号 " + "1");
-                    }
-                    this.times = array;
+                    today.setHours(0, 0, 0, 0);
+                    const selectedDateOnly = new Date(date);
+                    selectedDateOnly.setHours(0, 0, 0, 0);
+                    const isToday = selectedDateOnly.getTime() === today.getTime();
+                    
+                    // 请求失败时，不显示时间段，提示用户
+                    this.times = [];
+                    this.$message.error("获取时间段失败，请检查网络连接后重试");
                 });
         },
         isTimeAfterTarget(timeString) {
@@ -424,12 +542,21 @@ export default {
                             },
                         })
                         .then((res) => {
-                            if (res.data.status != 200)
-                                return this.$message.error(res.data.msg);
+                            if (res.data.status != 200) {
+                                this.$message.error(res.data.msg || "挂号失败");
+                                return;
+                            }
                             this.orderFormVisible = false;
                             this.$message.success("挂号成功！");
                             this.orderForm.oTime = '';
+                            // 关闭对话框
+                            this.orderFormVisible = false;
+                            // 重新加载医生列表（会更新剩余号数）
                             this.loadDoctors();
+                        })
+                        .catch((err) => {
+                            console.error("预约失败:", err);
+                            this.$message.error(err.response?.data?.msg || err.message || "预约失败，请重试");
                         });
                 } else {
                     return false;
@@ -439,25 +566,62 @@ export default {
         tokenDecode(token) {
             if (token !== null) return jwtDecode(token);
         },
-        openClick(id, name) {
+        handleBookClick(row) {
+            console.log("========== 点击挂号按钮 ==========");
+            console.log("行数据:", row);
+            const id = row.dId;
+            const name = row.dName;
+            const arId = row.arId;
+            console.log("提取的参数:", { id, name, arId });
+            this.openClick(id, name, arId);
+        },
+        openClick(id, name, arId) {
+            console.log("========== openClick 方法被调用 ==========");
+            console.log("openClick 参数:", { id, name, arId });
+            console.log("当前选择的日期:", this.selectedDate);
             this.orderForm.dId = id;
             this.orderForm.dName = name;
             // 使用选择的日期作为预约日期
             if (this.selectedDate) {
                 this.orderForm.orderDate = this.selectedDate;
+                this.orderDate = this.selectedDate; // 修复：同时设置 orderDate，供 requestTime 使用
+                console.log("设置预约日期:", this.selectedDate);
             }
+            // 检查 arId 是否存在
+            if (!arId) {
+                console.error("arId 为空，无法预约");
+                this.$message.error("排班信息不存在，无法预约");
+                return;
+            }
+            // 清空之前的时间段，避免显示旧数据
+            this.times = [];
+            this.orderForm.oTime = '';
             this.orderFormVisible = true;
-            this.requestTime(id);
+            console.log("对话框已打开，准备请求时间段");
+            // 延迟一下再请求，确保对话框已打开
+            this.$nextTick(() => {
+                console.log("$nextTick 执行，开始调用 requestTime");
+                this.requestTime(arId); // 传递排班ID而不是医生ID
+            });
         },
     },
     created() {
+        console.log("========== BookNow 组件已创建 ==========");
+        console.log("页面加载时间:", new Date().toLocaleString());
         const token = getToken();
         if (token) {
             const decoded = this.tokenDecode(token);
             this.orderForm.pName = decoded.pName;
             this.orderForm.pCard = decoded.pCard;
             this.orderForm.pId = decoded.pId;
+            console.log("患者信息已加载:", { pName: decoded.pName, pId: decoded.pId });
+        } else {
+            console.warn("未找到 token");
         }
+    },
+    mounted() {
+        console.log("========== BookNow 组件已挂载 ==========");
+        console.log("如果看到这条消息，说明控制台工作正常");
     },
 };
 </script>

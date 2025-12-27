@@ -83,11 +83,16 @@ public class PatientUserController {
      */
     @RequestMapping("addOrder")
     public R<Boolean> addOrder(Orders order, String arId) {
-        if (BooleanUtils.isTrue(orderService.addOrder(order, arId))) {
-            return R.ok("挂号成功");
+        try {
+            if (BooleanUtils.isTrue(orderService.addOrder(order, arId))) {
+                return R.ok("挂号成功");
+            }
+            return R.error("挂号失败, 当前时间段存在还未诊断的挂号单");
+        } catch (RuntimeException e) {
+            return R.error(e.getMessage());
+        } catch (Exception e) {
+            return R.error("挂号失败: " + e.getMessage());
         }
-
-        return R.error("挂号失败, 当前时间段存在还未诊断的挂号单");
     }
 
     /**

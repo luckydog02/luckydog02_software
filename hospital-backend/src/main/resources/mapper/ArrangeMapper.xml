@@ -27,4 +27,16 @@
         where ar_time=#{ar_time} and d_section=#{d_section}
     </select>
 
+    <resultMap id="arrangeMap" type="com.shanzhu.hospital.entity.po.Arrange">
+        <id property="arId" column="ar_id" />
+        <result property="arTime" column="ar_time" />
+        <result property="dId" column="d_id" />
+    </resultMap>
+
+    <select id="selectByArId" resultMap="arrangeMap">
+        select ar_id, ar_time, d_id
+        from arrange
+        where ar_id = #{arId}
+    </select>
+
 </mapper>
