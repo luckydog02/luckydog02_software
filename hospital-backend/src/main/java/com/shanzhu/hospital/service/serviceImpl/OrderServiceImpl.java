@@ -82,6 +82,77 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Orders> implement
     }
 
     /**
+     * 患者取消预约
+     *
+     * @param oId 挂号单id
+     * @param pId 患者id
+     * @return 结果
+     */
+    @Override
+    public Boolean cancelOrderByPatient(Integer oId, Integer pId) {
+        // 查找订单
+        Orders order = this.findOrderByOid(oId);
+        if (order == null) {
+            throw new RuntimeException("订单不存在");
+        }
+
+        // 检查订单是否属于该患者
+        if (order.getPId() != pId) {
+            throw new RuntimeException("无权取消该订单");
+        }
+
+        // 检查订单状态（只有未完成的订单才能取消，oState=0表示未完成）
+        // 如果 oState 为 null，视为未完成状态（可能是历史数据）
+        Integer oState = order.getOState();
+        if (oState != null && oState != 0) {
+            throw new RuntimeException("只能取消未完成的订单");
+        }
+        // oState 为 null 或 0 时，都允许取消（null 视为未完成状态）
+
+        // 检查预约时间（需要在就诊时间前才能取消）
+        String oStart = order.getOStart();
+        if (oStart == null || oStart.isEmpty()) {
+            throw new RuntimeException("预约时间无效");
+        }
+
+        // 解析预约时间，格式：yyyy-MM-dd HH:mm-HH:mm
+        // 提取开始时间部分（第一个时间段）
+        String startTimeStr = oStart;
+        if (oStart.length() > 11) {
+            // 提取日期和时间段，例如：2025-11-19 08:30-09:30
+            String datePart = oStart.substring(0, 10); // yyyy-MM-dd
+            String timePart = oStart.substring(11); // HH:mm-HH:mm
+            if (timePart.contains("-")) {
+                String startTime = timePart.split("-")[0]; // 第一个时间段，例如：08:30
+                startTimeStr = datePart + " " + startTime + ":00"; // 格式：2025-11-19 08:30:00
+            }
+        }
+
+        try {
+            // 解析预约开始时间
+            java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+            java.time.LocalDateTime appointmentTime = java.time.LocalDateTime.parse(startTimeStr, formatter);
+            // 获取当前时间
+            java.time.LocalDateTime now = java.time.LocalDateTime.now();
+            
+            // 检查是否已过就诊时间
+            if (now.isAfter(appointmentTime) || now.isEqual(appointmentTime)) {
+                throw new RuntimeException("已过就诊时间，无法取消预约");
+            }
+
+            // 删除订单
+            return this.removeById(oId);
+        } catch (java.time.format.DateTimeParseException e) {
+            throw new RuntimeException("预约时间格式错误");
+        } catch (Exception e) {
+            if (e instanceof RuntimeException) {
+                throw e;
+            }
+            throw new RuntimeException("取消预约失败：" + e.getMessage());
+        }
+    }
+
+    /**
      * 添加挂号单
      *
      * @param order 挂号单信息
@@ -275,12 +346,12 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Orders> implement
 
         //查询条件
         LambdaQueryWrapper<Orders> lambdaQuery = Wrappers.<Orders>lambdaQuery()
-                //模糊匹配病患id
-                .like(Orders::getPId, pId)
-                //医生id
+                //模糊匹配病患id（只有当pId不为空时才添加此条件）
+                .like(org.springframework.util.StringUtils.hasText(pId), Orders::getPId, pId)
+                //医生id（查询该医生的所有历史挂号，不限日期）
                 .eq(Orders::getDId, dId)
-                //按状态降序
-                .orderByDesc(Orders::getOState);
+                //按挂号时间倒序排列（最新的在前面）
+                .orderByDesc(Orders::getOStart);
 
         //分页查询
         IPage<Orders> iPage = this.page(page, lambdaQuery);

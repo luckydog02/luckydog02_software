@@ -208,14 +208,15 @@ export default {
             align-items: center;
             gap: 6px;
             cursor: pointer;
-            font-size: 16px;
-            color: #409EFF;
-            padding: 8px 16px;
-            font-weight: 500;
-            border-radius: 20px;
+            font-size: 17px;
+            color: #ffffff;
+            padding: 10px 20px;
+            font-weight: 600;
+            border-radius: 25px;
             transition: all 0.3s ease;
-            background: linear-gradient(135deg, rgba(64, 158, 255, 0.1) 0%, rgba(64, 158, 255, 0.05) 100%);
-            border: 1px solid rgba(64, 158, 255, 0.2);
+            background: #1a4d7a;
+            border: none;
+            box-shadow: 0 4px 12px rgba(26, 77, 122, 0.4);
             position: relative;
             overflow: hidden;
             
@@ -231,8 +232,8 @@ export default {
             }
             
             i {
-                font-size: 18px;
-                color: #409EFF;
+                font-size: 20px;
+                color: #ffffff;
             }
             
             span {
@@ -241,23 +242,23 @@ export default {
             }
             
             &:hover {
-                background: linear-gradient(135deg, rgba(64, 158, 255, 0.15) 0%, rgba(64, 158, 255, 0.1) 100%);
-                border-color: rgba(64, 158, 255, 0.4);
-                color: #66b1ff;
-                transform: translateY(-1px);
-                box-shadow: 0 2px 8px rgba(64, 158, 255, 0.2);
+                background: #2d5f8a;
+                color: #ffffff;
+                transform: translateY(-2px);
+                box-shadow: 0 6px 16px rgba(26, 77, 122, 0.5);
                 
                 &::before {
                     left: 100%;
                 }
                 
                 i {
-                    color: #66b1ff;
+                    color: #ffffff;
                 }
             }
             
             &:active {
                 transform: translateY(0);
+                box-shadow: 0 2px 8px rgba(255, 107, 53, 0.3);
             }
         }
         

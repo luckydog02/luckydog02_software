@@ -31,6 +31,15 @@ public interface OrderService {
     Boolean deleteOrder(Integer oId);
 
     /**
+     * 患者取消预约
+     *
+     * @param oId 挂号单id
+     * @param pId 患者id
+     * @return 结果
+     */
+    Boolean cancelOrderByPatient(Integer oId, Integer pId);
+
+    /**
      * 添加挂号单
      *
      * @param order 挂号单信息

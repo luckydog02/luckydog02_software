@@ -73,7 +73,7 @@
                 <span>医院管理</span>
               </template>
               <el-menu-item index="drugList" @click="menuClick('drugList')">
-                <i class="el-icon-medicine-box"></i>
+                <i class="el-icon-date"></i>
                 <span>药品信息管理</span>
               </el-menu-item>
               <el-menu-item index="checkList" @click="menuClick('checkList')">
@@ -163,7 +163,9 @@ export default {
     //获取激活路径
     this.activePath=getActivePath();
     //获取token
-    this.userName = this.getToken(getToken()).aName;
+    const aName = this.getToken(getToken()).aName;
+    // 首字母大写
+    this.userName = aName ? aName.charAt(0).toUpperCase() + aName.slice(1).toLowerCase() : aName;
    }
 };
 </script>

@@ -108,13 +108,12 @@
     </resultMap>
 
     <select id="findOrderByNull" resultMap="orderPatientDoctorMap">
-        SELECT o.o_id,d.d_name as dName,o.p_id,p.p_name as pName,o.o_start
-        from orders o JOIN doctor_user d JOIN patient_user p
-        on o.d_id=#{dId}
-        and o.d_id=d.d_id
-        and o.p_id=p.p_id
-        and o.o_start like #{oStart}"%"
-        and o.o_state=0
+        SELECT o.o_id,d.d_name as dName,o.p_id,p.p_name as pName,o.o_start,o.o_end,o.o_total_price,o.o_price_state,o.o_state
+        FROM orders o 
+        JOIN doctor_user d ON o.d_id = d.d_id
+        JOIN patient_user p ON o.p_id = p.p_id
+        WHERE o.d_id = #{dId}
+        AND o.o_start LIKE CONCAT(#{oStart}, '%')
         ORDER BY o.o_start
     </select>
 

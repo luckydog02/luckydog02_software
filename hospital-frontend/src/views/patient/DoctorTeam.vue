@@ -798,11 +798,23 @@ export default {
         }
         
         .btn-book {
-            background: #8fb6e0;
+            background: #409EFF;
             color: #ffffff;
+            border: none !important;
+            font-weight: 600;
+            font-size: 15px;
+            box-shadow: 0 4px 12px rgba(64, 158, 255, 0.4);
+            transition: all 0.3s ease;
             
             &:hover {
-                background: #7aa6d4;
+                background: #66b1ff;
+                box-shadow: 0 6px 16px rgba(64, 158, 255, 0.5);
+                transform: translateY(-2px);
+            }
+            
+            &:active {
+                transform: translateY(0);
+                box-shadow: 0 2px 8px rgba(64, 158, 255, 0.3);
             }
         }
     }

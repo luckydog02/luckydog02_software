@@ -88,6 +88,8 @@ public class DoctorUserServiceImpl extends ServiceImpl<DoctorUserMapper, Doctor>
         LambdaQueryWrapper<Doctor> lambadaQuery = Wrappers.<Doctor>lambdaQuery()
                 //模糊匹配 姓名
                 .like(Doctor::getDName, query)
+                //只查询在职医生（dState = 1表示在职）
+                .eq(Doctor::getDState, 1)
                 //是否在职倒序（优先展示在职的）
                 .orderByDesc(Doctor::getDState);
 

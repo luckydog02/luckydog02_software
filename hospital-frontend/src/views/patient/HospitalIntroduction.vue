@@ -19,9 +19,9 @@
                             <span class="br4 dib bw pl10 pr10">医保</span>
                             <span class="br4 dib bw pl10 pr10">三甲</span>
                         </div>
-                        <div class="f16 fcf mb10 opc9">全称：武汉理工大学医院</div>
+                        <div class="f16 fcf mb10 opc9 hospital-composition">组成：南湖校医院、西院校医院、东院校医院、余家头校医院</div>
                     </div>
-                    <div class="flr link-tel pl20 pr20 mr20 f16 mt15 pb20 pt20 br6">
+                    <div class="flr link-tel pl20 pr20 mr20 f16 pb20 pt20 br6">
                         <p class="lh28 top-icon-email tac">纠正信息请发送需求至</p>
                         <p class="lh28 tac">
                             <a href="javascript:;" class="green">whut_xyy@qq.com</a>
@@ -37,7 +37,7 @@
                 <h2 class="f28 lh36 pt25 pb5 mb3">
                     <span class="hos-index-title pl20">医院介绍</span>
                 </h2>
-                <div class="clr pl20">
+                <div class="clr pl20 hospital-intro-content">
                     <div class="fll left-txt">
                         <div class="f16 lh28 wbwr hid4 taj fc6 mb10">
                             {{ hospitalIntro }}
@@ -52,7 +52,7 @@
                         </div>
                     </div>
                     <div class="flr right-banner posr ovh br10">
-                        <el-carousel :interval="2000" height="300px" indicator-position="outside" :arrow="arrow">
+                        <el-carousel :interval="2000" height="300px" :indicator-position="false" :arrow="arrow">
                             <el-carousel-item v-for="(item, index) in carouselImages" :key="index">
                                 <div class="banner-item">
                                     <img :src="item" alt="医院图片" class="all-img img-cover banner-img">
@@ -120,34 +120,12 @@ export default {
 
 // 医院信息顶部
 .index-hospital-info-top {
-    background: linear-gradient(135deg, #409EFF 0%, #66b1ff 50%, #ecf5ff 100%);
+    background: #1a4d7a;
     padding: 30px 0 50px 0;
     margin-bottom: -30px;
     position: relative;
     overflow: hidden;
     
-    // 添加装饰性背景元素
-    &::before {
-        content: '';
-        position: absolute;
-        top: -50%;
-        right: -10%;
-        width: 400px;
-        height: 400px;
-        background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
-        border-radius: 50%;
-    }
-    
-    &::after {
-        content: '';
-        position: absolute;
-        bottom: -30%;
-        left: -5%;
-        width: 300px;
-        height: 300px;
-        background: radial-gradient(circle, rgba(255, 255, 255, 0.08) 0%, transparent 70%);
-        border-radius: 50%;
-    }
     
     .info {
         position: relative;
@@ -160,9 +138,9 @@ export default {
         }
         
         .hospital-logo {
-            width: 100px;
-            height: 100px;
-            border-radius: 12px;
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
             overflow: hidden;
             background: #fff;
             display: flex;
@@ -181,7 +159,7 @@ export default {
             img {
                 width: 100%;
                 height: 100%;
-                object-fit: contain;
+                object-fit: cover;
                 transition: transform 0.3s ease;
             }
             
@@ -191,10 +169,32 @@ export default {
         }
         
         .f28 {
-            font-size: 26px;
+            font-size: 32px;
             font-weight: 700;
             letter-spacing: 0.5px;
             text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        a.f28 {
+            text-decoration: none !important;
+            color: #ffffff !important;
+            transition: all 0.3s ease;
+            display: inline-block;
+            
+            &:hover {
+                text-decoration: none !important;
+                color: #ffffff !important;
+                transform: scale(1.05);
+                text-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+                letter-spacing: 1px;
+            }
+            
+            &:focus,
+            &:active,
+            &:visited {
+                text-decoration: none !important;
+                color: #ffffff !important;
+            }
         }
         
         .fcf {
@@ -209,12 +209,12 @@ export default {
                 background: rgba(255, 255, 255, 0.25);
                 backdrop-filter: blur(10px);
                 color: #fff;
-                padding: 6px 14px;
+                padding: 5px 12px;
                 margin-right: 10px;
                 margin-bottom: 6px;
                 transition: all 0.3s ease;
                 display: inline-block;
-                font-size: 13px;
+                font-size: 11px;
                 font-weight: 500;
                 border: 1px solid rgba(255, 255, 255, 0.3);
                 
@@ -230,8 +230,8 @@ export default {
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);
             border-radius: 12px;
-            width: 110px;
-            height: 110px;
+            width: 180px;
+            height: 120px;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -239,6 +239,7 @@ export default {
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
             transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             border: 1px solid rgba(255, 255, 255, 0.5);
+            align-self: flex-start;
             
             &:hover {
                 transform: translateY(-8px) scale(1.05);
@@ -247,7 +248,7 @@ export default {
             }
             
             .top-icon-email {
-                background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="%23409EFF" d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>') no-repeat center top;
+                background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="%231a4d7a" d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>') no-repeat center top;
                 padding-top: 32px;
                 margin-bottom: 10px;
                 background-size: 24px 24px;
@@ -257,15 +258,15 @@ export default {
                 margin: 0;
                 padding: 0;
                 font-size: 13px;
-                color: #606266;
+                color: #303133;
                 
                 a {
-                    color: #409EFF;
+                    color: #1a4d7a;
                     font-weight: 500;
                     transition: color 0.3s ease;
                     
                     &:hover {
-                        color: #66b1ff;
+                        color: #1a4d7a;
                     }
                 }
             }
@@ -284,7 +285,7 @@ export default {
     max-width: 1200px;
     margin: 0 auto;
     padding: 20px 20px 30px;
-    margin-top: -30px;
+    margin-top: -50px;
     overflow-y: auto;
     max-height: calc(100vh - 150px);
     position: relative;
@@ -644,8 +645,16 @@ export default {
         }
     }
     
+    .hospital-intro-content {
+        display: flex;
+        align-items: flex-end;
+        gap: 30px;
+    }
+    
     .left-txt {
         width: calc(50% - 15px);
+        display: flex;
+        flex-direction: column;
         
         .f16 {
             line-height: 1.8;
@@ -701,26 +710,47 @@ export default {
     
     .right-banner {
         width: calc(50% - 15px);
-        height: 280px;
+        height: 300px;
         border-radius: 16px;
         overflow: hidden;
         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
         transition: all 0.4s ease;
         border: 1px solid rgba(0, 0, 0, 0.06);
+        align-self: flex-end;
+        display: flex;
+        align-items: flex-end;
         
         &:hover {
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
             transform: translateY(-3px);
         }
         
+        // Element UI 轮播图样式
+        ::v-deep .el-carousel {
+            width: 100%;
+            height: 100%;
+            
+            .el-carousel__container {
+                height: 100% !important;
+            }
+        }
+        
+        ::v-deep .el-carousel-item {
+            height: 100% !important;
+        }
+        
         .banner-item {
             width: 100%;
             height: 100%;
+            display: block;
+            position: relative;
             
             .banner-img {
                 width: 100%;
                 height: 100%;
                 object-fit: cover;
+                object-position: center;
+                display: block;
                 transition: transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
             }
         }
@@ -732,7 +762,7 @@ export default {
         
         // Element UI 轮播图样式优化
         ::v-deep .el-carousel__indicators {
-            bottom: 15px;
+            display: none !important;
         }
         
         ::v-deep .el-carousel__button {
@@ -981,6 +1011,17 @@ export default {
 
 .opc9 {
     opacity: 0.9;
+}
+
+.hospital-composition {
+    transition: all 0.3s ease;
+    cursor: default;
+    
+    &:hover {
+        opacity: 1;
+        transform: translateX(5px);
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
 }
 
 .pl10 {

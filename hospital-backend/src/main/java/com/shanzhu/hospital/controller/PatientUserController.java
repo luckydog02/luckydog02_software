@@ -154,4 +154,28 @@ public class PatientUserController {
     public R<List<com.shanzhu.hospital.entity.vo.SectionVo>> getSectionList() {
         return R.ok(doctorUserService.getAllSectionsWithDoctorCount());
     }
+
+    /**
+     * 患者取消预约
+     *
+     * @param oId 挂号单id
+     * @param pId 患者id
+     * @return 结果
+     */
+    @RequestMapping("cancelOrder")
+    public R<Boolean> cancelOrder(
+            @RequestParam(value = "oId") Integer oId,
+            @RequestParam(value = "pId") Integer pId
+    ) {
+        try {
+            if (BooleanUtils.isTrue(orderService.cancelOrderByPatient(oId, pId))) {
+                return R.ok("取消预约成功");
+            }
+            return R.error("取消预约失败");
+        } catch (RuntimeException e) {
+            return R.error(e.getMessage());
+        } catch (Exception e) {
+            return R.error("取消预约失败：" + e.getMessage());
+        }
+    }
 }

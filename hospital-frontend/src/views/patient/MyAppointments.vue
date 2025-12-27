@@ -12,13 +12,88 @@
             <p>加载中...</p>
         </div>
 
-        <!-- 空数据提示 -->
-        <el-empty v-if="!loading && orderData.length === 0" description="暂无预约记录"></el-empty>
-
-        <!-- 预约卡片列表 -->
-        <div v-if="!loading && orderData.length > 0" class="appointments-list">
+        <!-- 分类标签页 -->
+        <el-tabs v-model="activeTab" @tab-click="handleTabClick" v-if="!loading">
+            <!-- 待就诊 -->
+            <el-tab-pane label="待就诊" name="pending">
+                <el-empty v-if="pendingOrders.length === 0" description="暂无待就诊记录"></el-empty>
+                <div v-if="pendingOrders.length > 0" class="appointments-list">
             <div 
-                v-for="order in orderData" 
+                v-for="order in pendingOrders" 
+                :key="order.oId"
+                class="appointment-card br12 bw"
+            >
+                <div class="card-header">
+                    <div class="order-info">
+                        <div class="order-number">
+                            <i class="el-icon-document"></i>
+                            <span class="label">挂号单号：</span>
+                            <span class="value">{{ order.oId }}</span>
+                        </div>
+                        <div class="order-status">
+                            <el-tag
+                                size="small"
+                                type="info"
+                            >
+                                <i class="el-icon-time"></i> 待就诊
+                            </el-tag>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    <div class="info-row">
+                        <div class="info-item">
+                            <i class="el-icon-user"></i>
+                            <span class="label">患者姓名：</span>
+                            <span class="value">{{ order.pName }}</span>
+                        </div>
+                        <div class="info-item">
+                            <i class="el-icon-user-solid"></i>
+                            <span class="label">医生姓名：</span>
+                            <span class="value">{{ order.dName }}</span>
+                        </div>
+                    </div>
+
+                    <div class="info-row">
+                        <div class="info-item">
+                            <i class="el-icon-time"></i>
+                            <span class="label">预约时间段：</span>
+                            <span class="value">{{ formatTimeSlot(order.oStart) }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-footer">
+                    <!-- 待就诊：取消预约按钮 -->
+                    <el-button
+                        type="danger"
+                        size="small"
+                        @click="cancelOrder(order)"
+                        v-if="canCancelOrder(order)"
+                        class="action-btn"
+                    >
+                        <i class="el-icon-close"></i> 取消预约
+                    </el-button>
+                    <el-tag
+                        type="warning"
+                        size="small"
+                        v-else-if="order.oState === 0"
+                        class="action-tag"
+                    >
+                        已过取消时间
+                    </el-tag>
+                </div>
+            </div>
+                </div>
+            </el-tab-pane>
+            
+            <!-- 已就诊 -->
+            <el-tab-pane label="已就诊" name="completed">
+                <el-empty v-if="completedOrders.length === 0" description="暂无已就诊记录"></el-empty>
+                <div v-if="completedOrders.length > 0" class="appointments-list">
+            <div 
+                v-for="order in completedOrders" 
                 :key="order.oId"
                 class="appointment-card br12 bw"
             >
@@ -43,13 +118,6 @@
                                 v-else-if="order.oState === 1 && order.oPriceState === 0"
                             >
                                 <i class="el-icon-time"></i> 待缴费
-                            </el-tag>
-                            <el-tag
-                                size="small"
-                                type="info"
-                                v-else
-                            >
-                                <i class="el-icon-loading"></i> 进行中
                             </el-tag>
                         </div>
                     </div>
@@ -110,6 +178,7 @@
                 </div>
 
                 <div class="card-footer">
+                    <!-- 已就诊：缴费、评价、导出按钮 -->
                     <el-button
                         type="warning"
                         size="small"
@@ -140,7 +209,9 @@
                     </el-button>
                 </div>
             </div>
-        </div>
+                </div>
+            </el-tab-pane>
+        </el-tabs>
         
         <!-- 评价对话框 -->
         <el-dialog title="用户评价" :visible.sync="starVisible" width="600px">
@@ -205,10 +276,93 @@ export default {
             dName: "",
             oId: null,  // 当前评价的订单ID
             reviewContent: "",  // 评价内容
-            impressions: []  // 患者印象标签
+            impressions: [],  // 患者印象标签
+            activeTab: "pending"  // 当前选中的标签页
         };
     },
+    computed: {
+        // 待就诊订单（未完成，oState === 0）
+        pendingOrders() {
+            return this.orderData.filter(order => order.oState === 0);
+        },
+        // 已就诊订单（已完成，oState === 1）
+        completedOrders() {
+            return this.orderData.filter(order => order.oState === 1);
+        },
+    },
     methods: {
+        // 标签页切换
+        handleTabClick(tab) {
+            this.activeTab = tab.name;
+        },
+        //判断是否可以取消预约
+        canCancelOrder(order) {
+            // 只有未完成的订单才能取消
+            if (order.oState !== 0) {
+                return false;
+            }
+            
+            // 检查预约时间是否已过
+            if (!order.oStart) {
+                return false;
+            }
+            
+            try {
+                // 解析预约时间，格式：yyyy-MM-dd HH:mm-HH:mm
+                // 提取开始时间部分（第一个时间段）
+                let startTimeStr = order.oStart;
+                if (order.oStart.length > 11) {
+                    const datePart = order.oStart.substring(0, 10); // yyyy-MM-dd
+                    const timePart = order.oStart.substring(11); // HH:mm-HH:mm
+                    if (timePart.includes("-")) {
+                        const startTime = timePart.split("-")[0]; // 第一个时间段，例如：08:30
+                        startTimeStr = datePart + " " + startTime + ":00"; // 格式：2025-11-19 08:30:00
+                    }
+                }
+                
+                // 解析预约开始时间
+                const appointmentTime = new Date(startTimeStr.replace(/-/g, "/"));
+                const now = new Date();
+                
+                // 检查是否已过就诊时间（需要在就诊时间前才能取消）
+                return now < appointmentTime;
+            } catch (e) {
+                console.error("解析预约时间失败:", e);
+                return false;
+            }
+        },
+        //取消预约
+        cancelOrder(order) {
+            this.$confirm("确定要取消该预约吗？", "提示", {
+                confirmButtonText: "确定",
+                cancelButtonText: "取消",
+                type: "warning",
+            })
+                .then(() => {
+                    request
+                        .get("patient/cancelOrder", {
+                            params: {
+                                oId: order.oId,
+                                pId: this.userId,
+                            },
+                        })
+                        .then((res) => {
+                            if (res.data.status !== 200) {
+                                this.$message.error(res.data.msg || "取消预约失败");
+                                return;
+                            }
+                            this.$message.success("取消预约成功");
+                            this.requestOrder();
+                        })
+                        .catch((err) => {
+                            console.error("取消预约失败:", err);
+                            this.$message.error("取消预约失败，请重试");
+                        });
+                })
+                .catch(() => {
+                    this.$message.info("已取消操作");
+                });
+        },
         //评价点击确认
         starClick() {
             // 验证必要参数
@@ -412,6 +566,41 @@ export default {
             const hour = String(date.getHours()).padStart(2, "0");
             const minute = String(date.getMinutes()).padStart(2, "0");
             return `${year}-${month}-${day} ${hour}:${minute}`;
+        },
+        //格式化预约时间段（格式：yyyy-MM-dd HH:mm-HH:mm）
+        formatTimeSlot(oStart) {
+            if (!oStart) return "-";
+            
+            try {
+                // 如果格式是 yyyy-MM-dd HH:mm-HH:mm，直接格式化显示
+                if (oStart.length > 11 && oStart.includes("-") && oStart.substring(11).includes("-")) {
+                    const datePart = oStart.substring(0, 10); // yyyy-MM-dd
+                    const timePart = oStart.substring(11); // HH:mm-HH:mm
+                    
+                    // 格式化日期部分（例如：2025-01-20）
+                    const [year, month, day] = datePart.split("-");
+                    const formattedDate = `${year}年${month}月${day}日`;
+                    
+                    // 返回：2025年01月20日 08:30-09:30
+                    return `${formattedDate} ${timePart}`;
+                }
+                
+                // 如果不是标准格式，尝试解析
+                const date = new Date(oStart);
+                if (!isNaN(date.getTime())) {
+                    const year = date.getFullYear();
+                    const month = String(date.getMonth() + 1).padStart(2, "0");
+                    const day = String(date.getDate()).padStart(2, "0");
+                    const hour = String(date.getHours()).padStart(2, "0");
+                    const minute = String(date.getMinutes()).padStart(2, "0");
+                    return `${year}年${month}月${day}日 ${hour}:${minute}`;
+                }
+                
+                return oStart;
+            } catch (e) {
+                console.error("格式化预约时间段失败:", e);
+                return oStart;
+            }
         },
         //token解码
         tokenDecode(token) {

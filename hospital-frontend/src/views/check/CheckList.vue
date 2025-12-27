@@ -22,32 +22,49 @@
             <el-row type="flex">
                 <el-col :span="6">
                     <br/>
-                    <el-button size="small" type="success" style="font-size: 15px" @click="addFormVisible = true">
-                    <i class="iconfont icon-add-button" style="font-size: 15px;"></i>
-                        增加项目
+                    <el-button 
+                      size="small" 
+                      type="primary" 
+                      @click="addFormVisible = true" 
+                      class="add-check-btn"
+                    >
+                      <i class="iconfont icon-add-button"></i>
+                      增加项目
                     </el-button>
                 </el-col>
             </el-row>
 
             <!--表格 -->
-            <el-table :data="checkData" size="small" stripe style="width: 100%" border>
-                <el-table-column label="编号" prop="chId"/>
-                <el-table-column label="项目" prop="chName"/>
-                <el-table-column label="价格/元"prop="chPrice"/>
-                <el-table-column label="操作" width="200" fixed="right">
+            <el-table 
+              :data="checkData" 
+              size="small" 
+              stripe 
+              style="width: 100%" 
+              border
+              class="check-table"
+              :row-class-name="tableRowClassName"
+            >
+                <el-table-column label="编号" prop="chId" align="center"/>
+                <el-table-column label="项目" prop="chName" align="center"/>
+                <el-table-column label="价格/元" prop="chPrice" align="center"/>
+                <el-table-column label="操作" width="200" fixed="right" align="center">
                     <template slot-scope="scope">
                         <el-button
-                            size="small"
-                            style="font-size: 14px"
-                            type="success"
+                            size="mini"
+                            type="primary"
                             @click="modifyDialog(scope.row.chId)"
-                        ><i class="iconfont icon-edit-button" style="font-size: 12px;"></i></el-button>
+                            class="action-btn edit-btn"
+                        >
+                          <i class="iconfont icon-edit-button"></i>
+                        </el-button>
                         <el-button
-                            size="small"
-                            style="font-size: 14px"
+                            size="mini"
                             type="danger"
                             @click="deleteDialog(scope.row.chId)"
-                        ><i class="iconfont icon-delete-button" style="font-size: 12px;"></i></el-button>
+                            class="action-btn delete-btn"
+                        >
+                          <i class="iconfont icon-delete-button"></i>
+                        </el-button>
                     </template>
                 </el-table-column>
             </el-table>
@@ -275,9 +292,25 @@ export default {
                     },
                 })
                 .then((res) => {
-                    this.checkData = res.data.data.checks;
-                    this.total = res.data.data.total;
+                    if (res.data.status !== 200) {
+                        this.$message.error("请求数据失败");
+                        return;
+                    }
+                    this.checkData = res.data.data?.checks || [];
+                    this.total = res.data.data?.total || 0;
+                })
+                .catch((err) => {
+                    console.error("获取检查项目列表失败:", err);
+                    this.$message.error("获取检查项目列表失败，请重试");
                 });
+        },
+        // 表格行类名
+        tableRowClassName({ row, rowIndex }) {
+            if (rowIndex % 2 === 0) {
+                return 'even-row';
+            } else {
+                return 'odd-row';
+            }
         },
     },
     created() {
@@ -286,11 +319,206 @@ export default {
 };
 </script>
 <style scoped lang="scss">
-.el-table {
+// 增加项目按钮样式
+.add-check-btn {
+    font-size: 15px;
+    font-weight: 600;
+    padding: 10px 20px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #409EFF 0%, #66b1ff 100%);
+    border: none;
+    box-shadow: 0 4px 12px rgba(64, 158, 255, 0.3);
+    transition: all 0.3s ease;
+    animation: fadeInUp 0.5s ease;
+    
+    i {
+        font-size: 15px;
+        margin-right: 4px;
+    }
+    
+    &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(64, 158, 255, 0.4);
+        background: linear-gradient(135deg, #66b1ff 0%, #409EFF 100%);
+    }
+    
+    &:active {
+        transform: translateY(0);
+    }
+}
+
+// 表格样式美化
+.check-table {
     margin-top: 20px;
     margin-bottom: 20px;
+    border-radius: 8px;
+    overflow: hidden;
+    animation: fadeIn 0.6s ease;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    
+    ::v-deep .el-table__header {
+        background: linear-gradient(135deg, #f5f7fa 0%, #ecf5ff 100%);
+        
+        th {
+            background: transparent !important;
+            color: #303133;
+            font-weight: 600;
+            font-size: 14px;
+            padding: 12px 0;
+            border-bottom: 2px solid #e4e7ed;
+            text-align: center;
+            
+            .cell {
+                text-align: center;
+            }
+        }
+    }
+    
+    ::v-deep .el-table__body {
+        tr {
+            &.even-row {
+                background-color: #ffffff;
+            }
+            
+            &.odd-row {
+                background-color: #fafafa;
+            }
+            
+            td {
+                padding: 12px 0;
+                font-size: 13px;
+                color: #606266;
+                border-bottom: 1px solid #f0f2f5;
+                text-align: center;
+                
+                .cell {
+                    text-align: center;
+                }
+            }
+        }
+    }
+    
+    ::v-deep .el-table__border {
+        border: 1px solid #e4e7ed;
+    }
 }
+
+// 操作按钮样式
+.action-btn {
+    font-size: 14px;
+    padding: 6px 12px;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+    margin-right: 8px;
+    
+    i {
+        font-size: 12px;
+    }
+    
+    &:last-child {
+        margin-right: 0;
+    }
+    
+    &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    }
+    
+    &:active {
+        transform: translateY(0);
+    }
+}
+
+.edit-btn {
+    background: #409EFF;
+    border-color: #409EFF;
+    
+    &:hover {
+        background: #66b1ff;
+        border-color: #66b1ff;
+        box-shadow: 0 4px 12px rgba(64, 158, 255, 0.3);
+    }
+}
+
+.delete-btn {
+    background: #606266;
+    border-color: #606266;
+    color: #ffffff;
+    
+    &:hover {
+        background: #909399;
+        border-color: #909399;
+        box-shadow: 0 4px 12px rgba(96, 98, 102, 0.3);
+    }
+}
+
+// 动画效果
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
 .el-form {
     margin-top: 0;
+}
+
+// 卡片样式
+::v-deep .el-card {
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+    
+    &:hover {
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+    }
+}
+
+// 分页样式
+::v-deep .el-pagination {
+    margin-top: 20px;
+    text-align: center;
+    
+    .el-pager li {
+        border-radius: 4px;
+        transition: all 0.3s ease;
+        
+        &:hover {
+            color: #409EFF;
+            transform: scale(1.1);
+        }
+        
+        &.active {
+            background: #409EFF;
+            color: #fff;
+        }
+    }
+    
+    .btn-prev,
+    .btn-next {
+        border-radius: 4px;
+        transition: all 0.3s ease;
+        
+        &:hover {
+            color: #409EFF;
+            transform: scale(1.1);
+        }
+    }
 }
 </style>
