@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.shanzhu.hospital.mapper.ReviewMapper">
+
+    <resultMap id="reviewDetailMap" type="com.shanzhu.hospital.entity.po.Review">
+        <id property="rId" column="r_id" />
+        <result property="pId" column="p_id" />
+        <result property="dId" column="d_id" />
+        <result property="oId" column="o_id" />
+        <result property="rStar" column="r_star" />
+        <result property="rContent" column="r_content" />
+        <result property="rImpressions" column="r_impressions" />
+        <result property="rTime" column="r_time" />
+        <result property="pName" column="p_name" />
+        <result property="dName" column="d_name" />
+        <result property="dPost" column="d_post" />
+    </resultMap>
+
+    <select id="selectReviewWithDetails" resultMap="reviewDetailMap">
+        SELECT 
+            r.r_id,
+            r.p_id,
+            r.d_id,
+            r.o_id,
+            r.r_star,
+            r.r_content,
+            r.r_impressions,
+            r.r_time,
+            p.p_name,
+            d.d_name,
+            d.d_post
+        FROM review r
+        LEFT JOIN patient_user p ON r.p_id = p.p_id
+        LEFT JOIN doctor_user d ON r.d_id = d.d_id
+        <where>
+            <if test="dId != null and dId != 0">
+                AND r.d_id = #{dId}
+            </if>
+        </where>
+        ORDER BY r.r_time DESC
+    </select>
+
+</mapper>
+
