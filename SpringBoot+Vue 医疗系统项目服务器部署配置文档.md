@@ -247,12 +247,6 @@ tail -100f server.log # 实时查看启动日志，无报错即启动成功`
         try_files $uri $uri/ /index.html; # 解决Vue路由刷新404问题
     }
 
-    # 反向代理后端接口（可选，避免跨域）
-    location /api {
-        proxy_pass http://47.122.117.145:9281;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-    }
 }`
 
 5. 重启Nginx使配置生效
